@@ -104,10 +104,10 @@ export function AuthForm() {
                                         Forgot password?
                                     </button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
+                                <DialogContent className="sm:max-w-[425px] bg-white border-gray-200">
                                     <DialogHeader>
-                                        <DialogTitle>Reset Password</DialogTitle>
-                                        <DialogDescription>
+                                        <DialogTitle className="text-gray-900">Reset Password</DialogTitle>
+                                        <DialogDescription className="text-gray-600">
                                             Enter your email address and we'll send you a link to reset your password.
                                         </DialogDescription>
                                     </DialogHeader>

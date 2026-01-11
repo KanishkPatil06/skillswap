@@ -46,7 +46,7 @@ export function ResetPasswordForm() {
                 <Button
                     variant="outline"
                     onClick={() => setSuccess(false)}
-                    className="w-full"
+                    className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
                 >
                     Send Another Email
                 </Button>
@@ -57,7 +57,7 @@ export function ResetPasswordForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
+                <Label htmlFor="reset-email" className="text-gray-700">Email</Label>
                 <Input
                     id="reset-email"
                     type="email"
@@ -66,17 +66,17 @@ export function ResetPasswordForm() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="w-full"
+                    className="w-full bg-white border-gray-300 text-gray-900"
                 />
             </div>
 
             {error && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                     {error}
                 </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                 {loading ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

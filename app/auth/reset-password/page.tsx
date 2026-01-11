@@ -67,11 +67,11 @@ export default function ResetPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-card">
-                <div className="max-w-md w-full mx-auto p-8 bg-card border border-border rounded-lg shadow-lg">
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="max-w-md w-full mx-auto p-8 bg-white border border-gray-200 rounded-lg shadow-lg">
                     <div className="text-center space-y-4">
-                        <h1 className="text-2xl font-bold text-foreground">Password Reset Successful!</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="text-2xl font-bold text-gray-900">Password Reset Successful!</h1>
+                        <p className="text-gray-600">
                             Your password has been updated. Redirecting you to the login page...
                         </p>
                     </div>
@@ -81,18 +81,18 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-card">
-            <div className="max-w-md w-full mx-auto p-8 bg-card border border-border rounded-lg shadow-lg">
+        <div className="min-h-screen flex items-center justify-center bg-white">
+            <div className="max-w-md w-full mx-auto p-8 bg-white border border-gray-200 rounded-lg shadow-lg">
                 <div className="text-center space-y-2 mb-6">
-                    <h1 className="text-2xl font-bold text-foreground">Reset Your Password</h1>
-                    <p className="text-sm text-muted-foreground">
+                    <h1 className="text-2xl font-bold text-gray-900">Reset Your Password</h1>
+                    <p className="text-sm text-gray-600">
                         Enter your new password below
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="password">New Password</Label>
+                        <Label htmlFor="password" className="text-gray-700">New Password</Label>
                         <div className="relative">
                             <Input
                                 id="password"
@@ -102,12 +102,12 @@ export default function ResetPasswordPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 disabled={loading}
-                                className="w-full pr-10"
+                                className="w-full pr-10 bg-white border-gray-300 text-gray-900"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                                 disabled={loading}
                             >
                                 {showPassword ? (
@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Label htmlFor="confirm-password" className="text-gray-700">Confirm Password</Label>
                         <Input
                             id="confirm-password"
                             type={showPassword ? "text" : "password"}
@@ -129,17 +129,17 @@ export default function ResetPasswordPage() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             disabled={loading}
-                            className="w-full"
+                            className="w-full bg-white border-gray-300 text-gray-900"
                         />
                     </div>
 
                     {error && (
-                        <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                             {error}
                         </div>
                     )}
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                         {loading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
                     <button
                         type="button"
                         onClick={() => router.push("/")}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-blue-600 hover:underline"
                     >
                         Back to login
                     </button>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Menu, X, LogOut } from "lucide-react"
+import { ThemeSwitch } from "@/components/ui/theme-switch"
 
 export function MainNav({ user }: { user: User }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -59,6 +60,7 @@ export function MainNav({ user }: { user: User }) {
             <span className="text-sm text-muted-foreground px-3 py-1 rounded-full bg-muted/50">
               {user.email}
             </span>
+            <ThemeSwitch />
             <Button
               variant="outline"
               size="sm"
@@ -95,15 +97,18 @@ export function MainNav({ user }: { user: User }) {
                 </Link>
               )
             })}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full justify-start gap-2 bg-transparent"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
+            <div className="flex gap-2">
+              <ThemeSwitch />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex-1 justify-start gap-2 bg-transparent"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         )}
       </div>

@@ -56,8 +56,8 @@
   --accent-foreground: 0 0% 8%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 8%;
-  --border: 0 0% 20%;
-  --input: 0 0% 15%;
+  --border: 240 6% 28%;
+  --input: 240 6% 18%;
   --ring: 250 95% 68%;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);

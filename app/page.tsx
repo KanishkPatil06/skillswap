@@ -4,6 +4,7 @@ import { LoginButton } from "@/components/auth/login-button"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { Sparkles, Users, MessageCircle, TrendingUp, Shield, Zap } from "lucide-react"
+import { ThemeSwitch } from "@/components/ui/theme-switch"
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -20,7 +21,10 @@ export default async function LandingPage() {
       <nav className="glass border-b border-border/50 sticky top-0 z-50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold gradient-text">SkillSwap</div>
-          <LoginButton />
+          <div className="flex items-center gap-3">
+            <ThemeSwitch />
+            <LoginButton />
+          </div>
         </div>
       </nav>
 
