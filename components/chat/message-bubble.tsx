@@ -1,5 +1,8 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import { Check, CheckCheck } from "lucide-react"
+import { useState, useEffect } from "react"
 
 interface MessageBubbleProps {
     content: string
@@ -16,13 +19,22 @@ export function MessageBubble({
     senderName,
     isRead,
 }: MessageBubbleProps) {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
     const formatTime = (date: Date) => {
-        return date.toLocaleTimeString("en-IN", {
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-            timeZone: "Asia/Kolkata",
-        })
+        // Browser automatically converts UTC to local timezone (IST)
+        // Just format it directly
+        const hours = date.getHours()
+        const minutes = date.getMinutes()
+        const ampm = hours >= 12 ? 'pm' : 'am'
+        const displayHours = hours % 12 || 12
+        const displayMinutes = minutes.toString().padStart(2, '0')
+
+        return `${displayHours}:${displayMinutes} ${ampm}`
     }
 
     return (
@@ -53,8 +65,9 @@ export function MessageBubble({
                                 "text-xs",
                                 isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
                             )}
+                            suppressHydrationWarning
                         >
-                            {formatTime(timestamp)}
+                            {mounted ? formatTime(timestamp) : "..."}
                         </span>
                         {isOwn && (
                             <span className="text-primary-foreground/70">

@@ -1,7 +1,7 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,9 +12,69 @@ import { ThemeSwitch } from "@/components/ui/theme-switch"
 
 export function MainNav({ user }: { user: User }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      // 1. Get all connections for the user
+      const { data: connections } = await supabase
+        .from("connections")
+        .select("id")
+        .or(`user_id.eq.${user.id},connected_user_id.eq.${user.id}`)
+        .eq("status", "accepted")
+
+      if (!connections?.length) return
+
+      const connectionIds = connections.map(c => c.id)
+
+      // 2. Count unread messages in these connections sent by others
+      const { count } = await supabase
+        .from("chat_messages")
+        .select("*", { count: "exact", head: true })
+        .in("connection_id", connectionIds)
+        .neq("sender_id", user.id)
+        .is("read_at", null)
+
+      setUnreadCount(count || 0)
+
+      // 3. Subscribe to changes
+      const channel = supabase
+        .channel("global_notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "chat_messages",
+          },
+          async (payload) => {
+            // Check if the message belongs to one of user's connections
+            // @ts-ignore
+            if (connectionIds.includes(payload.new.connection_id)) {
+              // Refresh the count to be accurate
+              const { count: newCount } = await supabase
+                .from("chat_messages")
+                .select("*", { count: "exact", head: true })
+                .in("connection_id", connectionIds)
+                .neq("sender_id", user.id)
+                .is("read_at", null)
+
+              setUnreadCount(newCount || 0)
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }
+
+    fetchUnreadCount()
+  }, [user.id, supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -25,7 +85,7 @@ export function MainNav({ user }: { user: User }) {
     { label: "Dashboard", href: "/dashboard" },
     { label: "Discover", href: "/discover" },
     { label: "Help Requests", href: "/help-requests" },
-    { label: "Connections", href: "/connections" },
+    { label: "Connections", href: "/connections", hasBadge: unreadCount > 0 },
   ]
 
   return (
@@ -44,12 +104,15 @@ export function MainNav({ user }: { user: User }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`transition-all duration-300 ${isActive
+                    className={`relative transition-all duration-300 ${isActive
                       ? "bg-primary/10 text-primary font-semibold"
                       : "hover:bg-primary/5"
                       }`}
                   >
                     {item.label}
+                    {item.hasBadge && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    )}
                   </Button>
                 </Link>
               )
@@ -57,9 +120,15 @@ export function MainNav({ user }: { user: User }) {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <span className="text-sm text-muted-foreground px-3 py-1 rounded-full bg-muted/50">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors"
+            >
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-foreground text-xs font-medium border border-border/20" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.1)' }}>
+                {user.email?.charAt(0).toUpperCase()}
+              </div>
               {user.email}
-            </span>
+            </Link>
             <ThemeSwitch />
             <Button
               variant="outline"
@@ -73,10 +142,13 @@ export function MainNav({ user }: { user: User }) {
           </div>
 
           <button
-            className="md:hidden p-2 hover:bg-primary/10 rounded-lg transition-all duration-300"
+            className="md:hidden p-2 hover:bg-primary/10 rounded-lg transition-all duration-300 relative"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {unreadCount > 0 && !mobileOpen && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            )}
           </button>
         </div>
 
@@ -89,10 +161,13 @@ export function MainNav({ user }: { user: User }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`w-full justify-start ${isActive ? "bg-primary/10 text-primary font-semibold" : ""
+                    className={`w-full justify-start relative ${isActive ? "bg-primary/10 text-primary font-semibold" : ""
                       }`}
                   >
                     {item.label}
+                    {item.hasBadge && (
+                      <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    )}
                   </Button>
                 </Link>
               )

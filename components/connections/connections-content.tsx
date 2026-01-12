@@ -1,69 +1,147 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, MessageSquare } from "lucide-react"
+import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2 } from "lucide-react"
+import { MainNav } from "@/components/navigation/main-nav"
 
 interface Connection {
   id: string
+  user_id: string
   connected_user_id: string
   status: string
   created_at: string
-  profile: { full_name: string; bio: string; user_skills: any[] }
+  profile?: { full_name: string | null; bio: string | null; avatar_url?: string | null }
+  last_message?: string
+  last_message_time?: string
+  unread_count?: number
 }
 
 export default function ConnectionsContent({ user }: { user: User }) {
-  const [pendingConnections, setPendingConnections] = useState<Connection[]>([])
-  const [acceptedConnections, setAcceptedConnections] = useState<Connection[]>([])
+  const [sentConnections, setSentConnections] = useState<Connection[]>([])
   const [receivedConnections, setReceivedConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [processingId, setProcessingId] = useState<string | null>(null)
+  const supabase = useMemo(() => createClient(), [])
   const { toast } = useToast()
 
   useEffect(() => {
     fetchConnections()
-  }, [user.id, supabase])
+
+    // Subscribe to new messages to update the list immediately
+    const channel = supabase
+      .channel("connections_list_updates")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "chat_messages" },
+        () => {
+          fetchConnections()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user.id])
 
   const fetchConnections = async () => {
+    // Get connections where current user is the sender
     const { data: sent } = await supabase
       .from("connections")
-      .select("*, profile:profiles!connected_user_id(full_name, bio, user_skills(*, skill:skills(name)))")
+      .select("*, profile:profiles!connected_user_id(full_name, bio, avatar_url)")
       .eq("user_id", user.id)
 
+    // Get connections where current user is the receiver
     const { data: received } = await supabase
       .from("connections")
-      .select("*, profile:profiles!user_id(full_name, bio, user_skills(*, skill:skills(name)))")
+      .select("*, profile:profiles!user_id(full_name, bio, avatar_url)")
       .eq("connected_user_id", user.id)
 
-    const sentByStatus = sent || []
-    const receivedByUser = received || []
+    let sentData = (sent || []) as Connection[]
+    let receivedData = (received || []) as Connection[]
 
-    setPendingConnections(sentByStatus.filter((c) => c.status === "pending") as Connection[])
-    setAcceptedConnections(sentByStatus.filter((c) => c.status === "accepted") as Connection[])
-    setReceivedConnections(receivedByUser.filter((c) => c.status === "pending") as Connection[])
+    // Fetch last messages and unread counts for accepted connections
+    const acceptedIds = [
+      ...sentData.filter(c => c.status === 'accepted').map(c => c.id),
+      ...receivedData.filter(c => c.status === 'accepted').map(c => c.id)
+    ]
+
+    if (acceptedIds.length > 0) {
+      // We'll fetch messages for all these connections
+      const { data: messages } = await supabase
+        .from("chat_messages")
+        .select("id, connection_id, content, created_at, sender_id, read_at")
+        .in("connection_id", acceptedIds)
+        .order("created_at", { ascending: false })
+
+      if (messages) {
+        // Helper to process connections with message data
+        const processConnection = (conn: Connection) => {
+          const connMessages = messages.filter(m => m.connection_id === conn.id)
+          if (connMessages.length > 0) {
+            conn.last_message = connMessages[0].content
+            conn.last_message_time = connMessages[0].created_at
+
+            // Count unread messages sent by the OTHER user
+            conn.unread_count = connMessages.filter(
+              m => m.sender_id !== user.id && !m.read_at
+            ).length
+          }
+          return conn
+        }
+
+        sentData = sentData.map(c => c.status === 'accepted' ? processConnection(c) : c)
+        receivedData = receivedData.map(c => c.status === 'accepted' ? processConnection(c) : c)
+      }
+    }
+
+    setSentConnections(sentData)
+    setReceivedConnections(receivedData)
     setLoading(false)
   }
 
+  // Combine accepted connections from both sent and received
+  const acceptedConnections = [
+    ...sentConnections.filter((c) => c.status === "accepted"),
+    ...receivedConnections.filter((c) => c.status === "accepted"),
+  ].sort((a, b) => {
+    // Sort by last message time if available, otherwise connection creation time
+    const timeA = a.last_message_time || a.created_at
+    const timeB = b.last_message_time || b.created_at
+    return new Date(timeB).getTime() - new Date(timeA).getTime()
+  })
+
+  const pendingConnections = sentConnections.filter((c) => c.status === "pending")
+  const requestConnections = receivedConnections.filter((c) => c.status === "pending")
+
   const handleAcceptConnection = async (connectionId: string) => {
+    setProcessingId(connectionId)
     try {
-      const { error } = await supabase.from("connections").update({ status: "accepted" }).eq("id", connectionId)
+      const { error } = await supabase
+        .from("connections")
+        .update({ status: "accepted" })
+        .eq("id", connectionId)
 
       if (error) throw error
       toast({ title: "Success", description: "Connection accepted!" })
       fetchConnections()
     } catch (error) {
       toast({ title: "Error", description: "Failed to accept connection", variant: "destructive" })
+    } finally {
+      setProcessingId(null)
     }
   }
 
   const handleRejectConnection = async (connectionId: string) => {
+    setProcessingId(connectionId)
     try {
       const { error } = await supabase.from("connections").delete().eq("id", connectionId)
       if (error) throw error
@@ -71,87 +149,145 @@ export default function ConnectionsContent({ user }: { user: User }) {
       fetchConnections()
     } catch (error) {
       toast({ title: "Error", description: "Failed to decline connection", variant: "destructive" })
+    } finally {
+      setProcessingId(null)
     }
   }
 
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "?"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav user={user} />
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+            <p className="text-muted-foreground">Loading connections...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold text-primary">SkillSwap</div>
-          <div className="flex gap-4">
-            <Link href="/dashboard">
-              <Button variant="outline">Dashboard</Button>
-            </Link>
-            <Link href="/discover">
-              <Button variant="outline">Discover</Button>
-            </Link>
-            <Link href="/connections">
-              <Button variant="ghost">Connections</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <MainNav user={user} />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Connections</h1>
           <p className="text-muted-foreground">Manage your connections and start conversations</p>
         </div>
 
-        <Tabs defaultValue="accepted" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="accepted">
+        <Tabs defaultValue="connected" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/50">
+            <TabsTrigger value="connected" className="gap-2">
               Connected
-              {acceptedConnections.length > 0 && <span className="ml-2 text-xs">({acceptedConnections.length})</span>}
+              {acceptedConnections.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {acceptedConnections.length}
+                </Badge>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="pending">
+            <TabsTrigger value="pending" className="gap-2">
               Pending
-              {pendingConnections.length > 0 && <span className="ml-2 text-xs">({pendingConnections.length})</span>}
+              {pendingConnections.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {pendingConnections.length}
+                </Badge>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="received">
+            <TabsTrigger value="requests" className="gap-2">
               Requests
-              {receivedConnections.length > 0 && <span className="ml-2 text-xs">({receivedConnections.length})</span>}
+              {requestConnections.length > 0 && (
+                <Badge className="ml-1 text-xs bg-primary">
+                  {requestConnections.length}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="accepted" className="space-y-4">
+          {/* Connected Tab */}
+          <TabsContent value="connected" className="space-y-4">
             {acceptedConnections.length > 0 ? (
               acceptedConnections.map((connection) => (
-                <Card key={connection.id} className="bg-card hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{connection.profile?.full_name || "User"}</CardTitle>
-                        <CardDescription className="line-clamp-2">{connection.profile?.bio}</CardDescription>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-0">
-                        Connected
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {connection.profile?.user_skills && connection.profile.user_skills.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-sm mb-2">Skills</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {connection.profile.user_skills.slice(0, 3).map((us) => (
-                            <Badge key={us.id} variant="outline" className="text-xs">
-                              {us.skill?.name}
+                <Card
+                  key={connection.id}
+                  className="border-0 shadow-sm bg-card/80 hover:shadow-md transition-all duration-200 group"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Link href={`/profile/${connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}`}>
+                        {connection.profile?.avatar_url ? (
+                          <img
+                            src={connection.profile.avatar_url}
+                            alt={connection.profile?.full_name || "User"}
+                            className="w-12 h-12 rounded-full object-cover shadow-sm border border-border/20"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg shadow-inner border border-border/20" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
+                            {getInitials(connection.profile?.full_name)}
+                          </div>
+                        )}
+                      </Link>
+
+                      <div className="flex-1 min-w-0 grid grid-cols-1 gap-1">
+                        <div className="flex items-center gap-2 justify-between">
+                          <h3 className="font-semibold text-foreground truncate">
+                            {connection.profile?.full_name || "User"}
+                          </h3>
+                          {connection.unread_count && connection.unread_count > 0 ? (
+                            <Badge variant="destructive" className="h-5 min-w-5 rounded-full px-1 flex items-center justify-center text-[10px]">
+                              {connection.unread_count}
                             </Badge>
-                          ))}
+                          ) : null}
+                        </div>
+
+                        {/* Last Message or Bio */}
+                        <div className="min-h-[1.25rem]">
+                          {connection.last_message ? (
+                            <p className={`text-sm truncate pr-4 ${(connection.unread_count || 0) > 0
+                              ? "font-medium text-foreground"
+                              : "text-muted-foreground"
+                              }`}>
+                              {connection.last_message}
+                            </p>
+                          ) : (
+                            connection.profile?.bio ? (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {connection.profile.bio}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">
+                                Start a conversation
+                              </p>
+                            )
+                          )}
                         </div>
                       </div>
-                    )}
-                    <div className="pt-4 border-t border-border">
+
                       <Link href={`/chat/${connection.id}`}>
-                        <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90">
+                        <Button size="sm" variant={(connection.unread_count || 0) > 0 ? "default" : "outline"} className="gap-2 transition-all">
                           <MessageSquare className="w-4 h-4" />
-                          Send Message
+                          <span className="hidden sm:inline">Message</span>
                         </Button>
                       </Link>
                     </div>
@@ -159,100 +295,138 @@ export default function ConnectionsContent({ user }: { user: User }) {
                 </Card>
               ))
             ) : (
-              <Card>
-                <CardContent className="pt-8 text-center text-muted-foreground">
-                  <p>No connections yet. Discover people and send connection requests!</p>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={Users}
+                title="No connections yet"
+                description="Discover people and send connection requests to start building your network."
+                action={
+                  <Link href="/discover">
+                    <Button>Discover People</Button>
+                  </Link>
+                }
+              />
             )}
           </TabsContent>
 
+          {/* Pending Tab */}
           <TabsContent value="pending" className="space-y-4">
             {pendingConnections.length > 0 ? (
               pendingConnections.map((connection) => (
-                <Card key={connection.id} className="bg-card">
-                  <CardHeader>
-                    <CardTitle>{connection.profile?.full_name || "User"}</CardTitle>
-                    <CardDescription className="line-clamp-2">{connection.profile?.bio}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Waiting for response (sent {new Date(connection.created_at).toLocaleDateString()})
-                      </p>
+                <Card
+                  key={connection.id}
+                  className="border-0 shadow-sm bg-card/80"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold shrink-0 shadow-inner border border-border/20" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
+                        {getInitials(connection.profile?.full_name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {connection.profile?.full_name || "User"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Sent {formatDate(connection.created_at)}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                        Pending
+                      </Badge>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <Card>
-                <CardContent className="pt-8 text-center text-muted-foreground">
-                  <p>No pending requests</p>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={Clock}
+                title="No pending requests"
+                description="You don't have any pending connection requests."
+              />
             )}
           </TabsContent>
 
-          <TabsContent value="received" className="space-y-4">
-            {receivedConnections.length > 0 ? (
-              receivedConnections.map((connection) => (
-                <Card key={connection.id} className="bg-card">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{connection.profile?.full_name || "User"}</CardTitle>
-                        <CardDescription className="line-clamp-2">{connection.profile?.bio}</CardDescription>
+          {/* Requests Tab */}
+          <TabsContent value="requests" className="space-y-4">
+            {requestConnections.length > 0 ? (
+              requestConnections.map((connection) => (
+                <Card
+                  key={connection.id}
+                  className="border-0 shadow-sm bg-card/80"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold shrink-0 shadow-inner border border-border/20" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
+                        {getInitials(connection.profile?.full_name)}
                       </div>
-                      <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border-0">
-                        New
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {connection.profile?.user_skills && connection.profile.user_skills.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-sm mb-2">Skills</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {connection.profile.user_skills.slice(0, 3).map((us) => (
-                            <Badge key={us.id} variant="outline" className="text-xs">
-                              {us.skill?.name}
-                            </Badge>
-                          ))}
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {connection.profile?.full_name || "User"}
+                        </h3>
+                        {connection.profile?.bio && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {connection.profile.bio}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    <div className="flex gap-2 pt-4 border-t border-border">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAcceptConnection(connection.id)}
-                        className="flex-1 gap-2 bg-primary hover:bg-primary/90"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRejectConnection(connection.id)}
-                        className="flex-1 gap-2"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Decline
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleAcceptConnection(connection.id)}
+                          disabled={processingId === connection.id}
+                          className="gap-1"
+                        >
+                          {processingId === connection.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRejectConnection(connection.id)}
+                          disabled={processingId === connection.id}
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <Card>
-                <CardContent className="pt-8 text-center text-muted-foreground">
-                  <p>No pending requests</p>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={MessageSquare}
+                title="No new requests"
+                description="You don't have any pending connection requests from others."
+              />
             )}
           </TabsContent>
         </Tabs>
       </main>
+    </div>
+  )
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action
+}: {
+  icon: any
+  title: string
+  description: string
+  action?: React.ReactNode
+}) {
+  return (
+    <div className="text-center py-12 px-4">
+      <Icon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+      <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>
+      <p className="text-muted-foreground mb-4">{description}</p>
+      {action}
     </div>
   )
 }

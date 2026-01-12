@@ -4,12 +4,9 @@ import type { User } from "@supabase/supabase-js"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MainNav } from "@/components/navigation/main-nav"
-import ProfileTab from "./profile-tab"
-import SkillsTab from "./skills-tab"
-import { Settings, BarChart3, Users, MessageSquare, HelpCircle } from "lucide-react"
+import { BarChart3, Users, MessageSquare, HelpCircle, User as UserIcon, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardContent({ user }: { user: User }) {
@@ -46,6 +43,16 @@ export default function DashboardContent({ user }: { user: User }) {
     }
     fetchProfile()
   }, [user.id, supabase])
+
+  const getInitials = (name: string | null) => {
+    if (!name) return user.email?.charAt(0).toUpperCase() || "?"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -108,7 +115,7 @@ export default function DashboardContent({ user }: { user: User }) {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">Quick Actions</CardTitle>
@@ -126,7 +133,7 @@ export default function DashboardContent({ user }: { user: User }) {
                   </Button>
                 </Link>
                 <Link href="/help-requests">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <HelpCircle className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Help Requests</p>
@@ -135,7 +142,7 @@ export default function DashboardContent({ user }: { user: User }) {
                   </Button>
                 </Link>
                 <Link href="/connections">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <MessageSquare className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Connections</p>
@@ -143,13 +150,15 @@ export default function DashboardContent({ user }: { user: User }) {
                     </div>
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent" disabled>
-                  <Settings className="w-5 h-5" />
-                  <div className="text-left">
-                    <p className="font-semibold text-sm">Settings</p>
-                    <p className="text-xs text-muted-foreground">Coming soon</p>
-                  </div>
-                </Button>
+                <Link href="/profile">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <UserIcon className="w-5 h-5" />
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">Edit Profile</p>
+                      <p className="text-xs text-muted-foreground">Update your info & skills</p>
+                    </div>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -157,45 +166,34 @@ export default function DashboardContent({ user }: { user: User }) {
           <Card className="glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
-                <BarChart3 className="w-5 h-5" />
+                <UserIcon className="w-5 h-5" />
                 Your Profile
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">NAME</p>
-                <p className="text-sm font-semibold">{profile?.full_name || "Not set"}</p>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-foreground text-xl font-bold border-2 border-border/30" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 5px 9px rgba(0,0,0,0.1)' }}>
+                  {getInitials(profile?.full_name)}
+                </div>
+                <div>
+                  <p className="font-semibold">{profile?.full_name || "Not set"}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">EMAIL</p>
-                <p className="text-sm font-semibold">{user.email}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">JOINED</p>
-                <p className="text-sm font-semibold">{new Date(profile?.created_at).toLocaleDateString()}</p>
-              </div>
-              <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent" asChild>
-                <Link href="#profile-section">Edit Profile</Link>
-              </Button>
+              {profile?.bio && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+              )}
+              <Link href="/profile">
+                <Button variant="outline" size="sm" className="w-full mt-2 gap-2 bg-transparent">
+                  View Profile
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
-
-        <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="profile" id="profile-section">
-            <ProfileTab user={user} profile={profile} onProfileUpdate={setProfile} />
-          </TabsContent>
-
-          <TabsContent value="skills">
-            <SkillsTab user={user} />
-          </TabsContent>
-        </Tabs>
       </main>
     </div>
   )
 }
+

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import type { User } from "@supabase/supabase-js"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,8 +40,8 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   const [showScrollButton, setShowScrollButton] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout>()
-  const supabase = createClient()
+  const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const supabase = useMemo(() => createClient(), [])
   const { toast } = useToast()
 
   // Scroll to bottom function
@@ -113,6 +113,13 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
     }
 
     fetchData()
+  }, [user.id, connectionId, supabase, toast])
+
+  // Separate effect for subscriptions - only runs once connection is loaded
+  useEffect(() => {
+    if (!connection) return
+
+    console.log("Setting up real-time subscriptions for connection:", connectionId)
 
     // Subscribe to new messages
     const messageSubscription = supabase
@@ -126,7 +133,17 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           filter: `connection_id=eq.${connectionId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as ChatMessage])
+          console.log("New message received:", payload)
+          const newMessage = payload.new as ChatMessage
+          // Prevent duplicate messages - check if message already exists
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMessage.id)
+            if (exists) {
+              console.log("Message already exists, skipping duplicate")
+              return prev
+            }
+            return [...prev, newMessage]
+          })
           setTimeout(() => scrollToBottom(), 100)
           setTimeout(() => markMessagesAsRead(), 500)
         }
@@ -145,7 +162,18 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           )
         }
       )
-      .subscribe()
+      .subscribe((status, err) => {
+        console.log("Subscription status:", status)
+        if (err) {
+          console.error("Subscription error:", err)
+        }
+        if (status === "SUBSCRIBED") {
+          console.log("Successfully subscribed to chat messages for connection:", connectionId)
+        }
+        if (status === "CHANNEL_ERROR") {
+          console.error("Channel error - realtime may not be enabled for chat_messages table")
+        }
+      })
 
     // Subscribe to typing presence
     const presenceChannel = supabase.channel(`presence:${connectionId}`, {
@@ -169,10 +197,11 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       .subscribe()
 
     return () => {
+      console.log("Unsubscribing from real-time channels")
       messageSubscription.unsubscribe()
       presenceChannel.unsubscribe()
     }
-  }, [user.id, connectionId, supabase, toast])
+  }, [connection, user.id, connectionId, supabase])
 
   // Handle typing indicator
   const handleTyping = () => {
@@ -213,13 +242,20 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
     }
   }
 
-  // Group messages by date
+  // Group messages by date (using IST timezone)
   const groupMessagesByDate = (messages: ChatMessage[]) => {
     const groups: { date: Date; messages: ChatMessage[] }[] = []
     let currentDate: string | null = null
 
     messages.forEach((message) => {
-      const messageDate = new Date(message.created_at).toDateString()
+      // Convert to IST and get date string
+      const messageDate = new Date(message.created_at).toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+
       if (messageDate !== currentDate) {
         currentDate = messageDate
         groups.push({
