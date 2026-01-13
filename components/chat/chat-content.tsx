@@ -13,6 +13,7 @@ import { MessageBubble } from "./message-bubble"
 import { DateSeparator } from "./date-separator"
 import { TypingIndicator } from "./typing-indicator"
 import { MainNav } from "@/components/navigation/main-nav"
+import { parseStringAsUTC } from "@/lib/utils"
 
 interface ChatMessage {
   id: string
@@ -249,7 +250,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
     messages.forEach((message) => {
       // Convert to IST and get date string
-      const messageDate = new Date(message.created_at).toLocaleDateString("en-IN", {
+      const messageDate = parseStringAsUTC(message.created_at).toLocaleDateString("en-IN", {
         timeZone: "Asia/Kolkata",
         year: "numeric",
         month: "2-digit",
@@ -259,7 +260,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       if (messageDate !== currentDate) {
         currentDate = messageDate
         groups.push({
-          date: new Date(message.created_at),
+          date: parseStringAsUTC(message.created_at),
           messages: [message],
         })
       } else {
@@ -351,7 +352,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
                     <MessageBubble
                       key={message.id}
                       content={message.content}
-                      timestamp={new Date(message.created_at)}
+                      timestamp={parseStringAsUTC(message.created_at)}
                       isOwn={message.sender_id === user.id}
                       senderName={connection.profile?.full_name}
                       isRead={!!message.read_at}

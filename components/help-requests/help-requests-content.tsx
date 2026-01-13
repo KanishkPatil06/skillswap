@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { MainNav } from "@/components/navigation/main-nav"
 import CreateHelpRequestDialog from "./create-help-request-dialog"
 import { Loader2 } from "lucide-react"
+import { parseStringAsUTC } from "@/lib/utils"
 
 interface HelpRequest {
   id: string
@@ -119,7 +120,7 @@ export default function HelpRequestsContent({ user }: { user: User }) {
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                       <Badge variant="outline">{request.skill?.name}</Badge>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(request.created_at).toLocaleDateString()}
+                        {parseStringAsUTC(request.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
                       </p>
                     </div>
                   </CardContent>

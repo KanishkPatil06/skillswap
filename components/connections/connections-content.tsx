@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2 } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
+import { parseStringAsUTC } from "@/lib/utils"
 
 interface Connection {
   id: string
@@ -165,10 +166,11 @@ export default function ConnectionsContent({ user }: { user: User }) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
+    return parseStringAsUTC(dateString).toLocaleDateString("en-IN", {
       day: "numeric",
       month: "short",
       year: "numeric",
+      timeZone: "Asia/Kolkata",
     })
   }
 

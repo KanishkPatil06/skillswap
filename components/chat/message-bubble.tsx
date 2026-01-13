@@ -26,15 +26,12 @@ export function MessageBubble({
     }, [])
 
     const formatTime = (date: Date) => {
-        // Browser automatically converts UTC to local timezone (IST)
-        // Just format it directly
-        const hours = date.getHours()
-        const minutes = date.getMinutes()
-        const ampm = hours >= 12 ? 'pm' : 'am'
-        const displayHours = hours % 12 || 12
-        const displayMinutes = minutes.toString().padStart(2, '0')
-
-        return `${displayHours}:${displayMinutes} ${ampm}`
+        return new Intl.DateTimeFormat('en-IN', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Kolkata'
+        }).format(date)
     }
 
     return (

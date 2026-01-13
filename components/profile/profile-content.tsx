@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { MainNav } from "@/components/navigation/main-nav"
 import { useToast } from "@/hooks/use-toast"
 import { User as UserIcon, Briefcase, X, Plus, Save, Loader2, Camera } from "lucide-react"
+import { parseStringAsUTC } from "@/lib/utils"
 
 interface Profile {
     id: string
@@ -281,7 +282,7 @@ export default function ProfileContent({ user }: { user: User }) {
                         <p className="text-muted-foreground">{user.email}</p>
                         {profile?.created_at && (
                             <p className="text-sm text-muted-foreground mt-1">
-                                Member since {new Date(profile.created_at).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                                Member since {parseStringAsUTC(profile.created_at).toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "Asia/Kolkata" })}
                             </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-2">
