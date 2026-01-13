@@ -26,6 +26,7 @@ export function AuthForm() {
     const [isLogin, setIsLogin] = useState(true)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [fullName, setFullName] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [showResetDialog, setShowResetDialog] = useState(false)
@@ -50,6 +51,17 @@ export function AuthForm() {
                     router.refresh()
                 }
             } else {
+                // Validate full name for signup
+                if (!fullName.trim()) {
+                    toast({
+                        title: "Validation Error",
+                        description: "Please enter your full name",
+                        variant: "destructive"
+                    })
+                    setLoading(false)
+                    return
+                }
+
                 // Sign up with email and password
                 const { data, error } = await supabase.auth.signUp({
                     email,
@@ -59,6 +71,17 @@ export function AuthForm() {
                 if (error) throw error
 
                 if (data.user) {
+                    // Update profile with full name
+                    const { error: profileError } = await supabase
+                        .from("profiles")
+                        .update({ full_name: fullName.trim() })
+                        .eq("id", data.user.id)
+
+                    if (profileError) {
+                        console.error("Profile update error:", profileError)
+                        // Don't throw error, profile was created by trigger
+                    }
+
                     toast({ title: "Success", description: "Account created successfully!" })
                     router.push("/dashboard")
                     router.refresh()
@@ -78,6 +101,22 @@ export function AuthForm() {
     return (
         <div className="w-full max-w-md mx-auto space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                    <div className="space-y-2">
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
+                            id="fullName"
+                            type="text"
+                            placeholder="Your full name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            required
+                            disabled={loading}
+                            className="w-full"
+                        />
+                    </div>
+                )}
+
                 <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -160,6 +199,7 @@ export function AuthForm() {
                     type="button"
                     onClick={() => {
                         setIsLogin(!isLogin)
+                        setFullName("")
                     }}
                     className="text-sm text-primary hover:underline"
                     disabled={loading}
