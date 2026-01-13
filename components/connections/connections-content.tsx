@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2 } from "lucide-react"
+import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2, Trash2 } from "lucide-react"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
 
@@ -30,6 +30,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
   const [receivedConnections, setReceivedConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
   const { toast } = useToast()
 
@@ -152,6 +153,20 @@ export default function ConnectionsContent({ user }: { user: User }) {
       toast({ title: "Error", description: "Failed to decline connection", variant: "destructive" })
     } finally {
       setProcessingId(null)
+    }
+  }
+
+  const handleDeleteConnection = async (connectionId: string) => {
+    setDeletingId(connectionId)
+    try {
+      const { error } = await supabase.from("connections").delete().eq("id", connectionId)
+      if (error) throw error
+      toast({ title: "Success", description: "Connection removed" })
+      fetchConnections()
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to remove connection", variant: "destructive" })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -286,12 +301,27 @@ export default function ConnectionsContent({ user }: { user: User }) {
                         </div>
                       </div>
 
-                      <Link href={`/chat/${connection.id}`}>
-                        <Button size="sm" variant={(connection.unread_count || 0) > 0 ? "default" : "outline"} className="gap-2 transition-all">
-                          <MessageSquare className="w-4 h-4" />
-                          <span className="hidden sm:inline">Message</span>
+                      <div className="flex gap-2">
+                        <Link href={`/chat/${connection.id}`}>
+                          <Button size="sm" variant={(connection.unread_count || 0) > 0 ? "default" : "outline"} className="gap-2 transition-all">
+                            <MessageSquare className="w-4 h-4" />
+                            <span className="hidden sm:inline">Message</span>
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteConnection(connection.id)}
+                          disabled={deletingId === connection.id}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                        >
+                          {deletingId === connection.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            "Disconnect"
+                          )}
                         </Button>
-                      </Link>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -332,9 +362,25 @@ export default function ConnectionsContent({ user }: { user: User }) {
                           Sent {formatDate(connection.created_at)}
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
-                        Pending
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                          Pending
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteConnection(connection.id)}
+                          disabled={deletingId === connection.id}
+                          className="text-muted-foreground hover:text-destructive"
+                          title="Cancel request"
+                        >
+                          {deletingId === connection.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

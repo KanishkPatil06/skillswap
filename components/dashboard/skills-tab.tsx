@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { X } from "lucide-react"
+import { X, Loader2 } from "lucide-react"
 
 interface UserSkill {
   id: string
@@ -21,6 +21,7 @@ export default function SkillsTab({ user }: { user: User }) {
   const [userSkills, setUserSkills] = useState<UserSkill[]>([])
   const [selectedSkill, setSelectedSkill] = useState("")
   const [loading, setLoading] = useState(false)
+  const [removingSkillId, setRemovingSkillId] = useState<string | null>(null)
   const supabase = createClient()
   const { toast } = useToast()
 
@@ -63,6 +64,7 @@ export default function SkillsTab({ user }: { user: User }) {
   }
 
   const handleRemoveSkill = async (skillId: string) => {
+    setRemovingSkillId(skillId)
     try {
       const { error } = await supabase.from("user_skills").delete().eq("id", skillId)
       if (error) throw error
@@ -70,6 +72,8 @@ export default function SkillsTab({ user }: { user: User }) {
       toast({ title: "Success", description: "Skill removed" })
     } catch (error) {
       toast({ title: "Error", description: "Failed to remove skill", variant: "destructive" })
+    } finally {
+      setRemovingSkillId(null)
     }
   }
 
@@ -108,8 +112,17 @@ export default function SkillsTab({ user }: { user: User }) {
                   <h4 className="font-semibold">{userSkill.skill?.name}</h4>
                   <p className="text-sm text-muted-foreground">Level: {userSkill.level}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => handleRemoveSkill(userSkill.id)}>
-                  <X className="w-4 h-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveSkill(userSkill.id)}
+                  disabled={removingSkillId === userSkill.id}
+                >
+                  {removingSkillId === userSkill.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <X className="w-4 h-4" />
+                  )}
                 </Button>
               </CardContent>
             </Card>

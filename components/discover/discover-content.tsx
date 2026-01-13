@@ -76,6 +76,40 @@ export default function DiscoverContent({ user }: { user: User }) {
   const handleConnect = async (targetUserId: string) => {
     setConnectingId(targetUserId)
     try {
+      // Check if connection already exists in EITHER direction
+      const { data: existing, error: checkError } = await supabase
+        .from("connections")
+        .select("id, status, user_id, connected_user_id")
+        .or(`and(user_id.eq.${user.id},connected_user_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},connected_user_id.eq.${user.id})`)
+        .maybeSingle()
+
+      if (checkError) throw checkError
+
+      if (existing) {
+        // Connection already exists
+        if (existing.status === "pending") {
+          // If they sent us a request, auto-accept it
+          if (existing.user_id === targetUserId && existing.connected_user_id === user.id) {
+            const { error: acceptError } = await supabase
+              .from("connections")
+              .update({ status: "accepted" })
+              .eq("id", existing.id)
+
+            if (acceptError) throw acceptError
+            toast({ title: "Success", description: "Connection accepted! You can now chat." })
+          } else {
+            // We already sent them a request
+            toast({ title: "Info", description: "Connection request already sent" })
+          }
+        } else if (existing.status === "accepted") {
+          toast({ title: "Info", description: "Already connected" })
+        } else {
+          toast({ title: "Info", description: "Connection exists" })
+        }
+        return
+      }
+
+      // No existing connection, create new one
       const { error } = await supabase.from("connections").insert({
         user_id: user.id,
         connected_user_id: targetUserId,
@@ -83,7 +117,7 @@ export default function DiscoverContent({ user }: { user: User }) {
       })
 
       if (error) {
-        if (error.message.includes("duplicate")) {
+        if (error.message.includes("duplicate") || error.message.includes("unique")) {
           toast({ title: "Info", description: "Connection already exists" })
         } else {
           throw error
@@ -92,6 +126,7 @@ export default function DiscoverContent({ user }: { user: User }) {
         toast({ title: "Success", description: "Connection request sent!" })
       }
     } catch (error) {
+      console.error("Connection error:", error)
       toast({ title: "Error", description: "Failed to send connection request", variant: "destructive" })
     } finally {
       setConnectingId(null)

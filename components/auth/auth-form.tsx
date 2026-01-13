@@ -16,24 +16,22 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { ResetPasswordForm } from "./reset-password-form"
+import { useToast } from "@/hooks/use-toast"
 
 export function AuthForm() {
     const router = useRouter()
     const supabase = createClient()
+    const { toast } = useToast()
 
     const [isLogin, setIsLogin] = useState(true)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [message, setMessage] = useState<string | null>(null)
     const [showResetDialog, setShowResetDialog] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError(null)
-        setMessage(null)
         setLoading(true)
 
         try {
@@ -47,6 +45,7 @@ export function AuthForm() {
                 if (error) throw error
 
                 if (data.user) {
+                    toast({ title: "Success", description: "Welcome back!" })
                     router.push("/dashboard")
                     router.refresh()
                 }
@@ -60,15 +59,17 @@ export function AuthForm() {
                 if (error) throw error
 
                 if (data.user) {
-                    setMessage("Account created successfully! Redirecting to dashboard...")
-                    setTimeout(() => {
-                        router.push("/dashboard")
-                        router.refresh()
-                    }, 1500)
+                    toast({ title: "Success", description: "Account created successfully!" })
+                    router.push("/dashboard")
+                    router.refresh()
                 }
             }
         } catch (err: any) {
-            setError(err.message || "An error occurred during authentication")
+            toast({
+                title: "Authentication Error",
+                description: err.message || "An error occurred during authentication",
+                variant: "destructive"
+            })
         } finally {
             setLoading(false)
         }
@@ -111,7 +112,7 @@ export function AuthForm() {
                                             Enter your email address and we'll send you a link to reset your password.
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <ResetPasswordForm />
+                                    <ResetPasswordForm onSuccess={() => setShowResetDialog(false)} />
                                 </DialogContent>
                             </Dialog>
                         )}
@@ -142,18 +143,6 @@ export function AuthForm() {
                     </div>
                 </div>
 
-                {error && (
-                    <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-                        {error}
-                    </div>
-                )}
-
-                {message && (
-                    <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
-                        {message}
-                    </div>
-                )}
-
                 <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
                         <>
@@ -171,8 +160,6 @@ export function AuthForm() {
                     type="button"
                     onClick={() => {
                         setIsLogin(!isLogin)
-                        setError(null)
-                        setMessage(null)
                     }}
                     className="text-sm text-primary hover:underline"
                     disabled={loading}

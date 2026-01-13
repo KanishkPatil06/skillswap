@@ -6,19 +6,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ onSuccess }: { onSuccess?: () => void }) {
     const supabase = createClient()
+    const { toast } = useToast()
 
     const [email, setEmail] = useState("")
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [success, setSuccess] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError(null)
-        setSuccess(false)
         setLoading(true)
 
         try {
@@ -28,30 +26,24 @@ export function ResetPasswordForm() {
 
             if (error) throw error
 
-            setSuccess(true)
+            toast({
+                title: "Success",
+                description: "Password reset email sent! Check your inbox for instructions."
+            })
             setEmail("")
+            // Auto-close dialog after success
+            if (onSuccess) {
+                setTimeout(() => onSuccess(), 1000)
+            }
         } catch (err: any) {
-            setError(err.message || "An error occurred while sending reset email")
+            toast({
+                title: "Error",
+                description: err.message || "An error occurred while sending reset email",
+                variant: "destructive"
+            })
         } finally {
             setLoading(false)
         }
-    }
-
-    if (success) {
-        return (
-            <div className="text-center space-y-4">
-                <div className="p-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
-                    Password reset email sent! Check your inbox for instructions.
-                </div>
-                <Button
-                    variant="outline"
-                    onClick={() => setSuccess(false)}
-                    className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
-                >
-                    Send Another Email
-                </Button>
-            </div>
-        )
     }
 
     return (
@@ -69,12 +61,6 @@ export function ResetPasswordForm() {
                     className="w-full bg-white border-gray-300 text-gray-900"
                 />
             </div>
-
-            {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                    {error}
-                </div>
-            )}
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
                 {loading ? (

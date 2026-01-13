@@ -43,6 +43,7 @@ export default function ProfileContent({ user }: { user: User }) {
     const [saving, setSaving] = useState(false)
     const [addingSkill, setAddingSkill] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
+    const [removingSkillId, setRemovingSkillId] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const supabase = createClient()
     const { toast } = useToast()
@@ -191,6 +192,7 @@ export default function ProfileContent({ user }: { user: User }) {
     }
 
     const handleRemoveSkill = async (skillId: string) => {
+        setRemovingSkillId(skillId)
         try {
             const { error } = await supabase.from("user_skills").delete().eq("id", skillId)
             if (error) throw error
@@ -198,6 +200,8 @@ export default function ProfileContent({ user }: { user: User }) {
             toast({ title: "Success", description: "Skill removed" })
         } catch (error) {
             toast({ title: "Error", description: "Failed to remove skill", variant: "destructive" })
+        } finally {
+            setRemovingSkillId(null)
         }
     }
 
@@ -422,9 +426,14 @@ export default function ProfileContent({ user }: { user: User }) {
                                             <span className="text-xs opacity-70">• {userSkill.level}</span>
                                             <button
                                                 onClick={() => handleRemoveSkill(userSkill.id)}
-                                                className="ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 transition-colors"
+                                                disabled={removingSkillId === userSkill.id}
+                                                className="ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <X className="w-3 h-3" />
+                                                {removingSkillId === userSkill.id ? (
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                ) : (
+                                                    <X className="w-3 h-3" />
+                                                )}
                                             </button>
                                         </Badge>
                                     ))}
