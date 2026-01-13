@@ -176,7 +176,16 @@ export default function ProfileContent({ user }: { user: User }) {
             })
 
             if (error) throw error
-            toast({ title: "Success", description: "Skill added successfully" })
+
+            // Award points for adding skill
+            await supabase.rpc('award_points', {
+                p_user_id: user.id,
+                p_activity_type: 'skill_added',
+                p_points: 10,
+                p_description: 'Added new skill'
+            })
+
+            toast({ title: "Success", description: "Skill added! +10 points" })
 
             const { data } = await supabase
                 .from("user_skills")

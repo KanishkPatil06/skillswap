@@ -11,12 +11,16 @@ import { Badge } from "@/components/ui/badge"
 import { UserPlus, ExternalLink, Loader2, Search, Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { MainNav } from "@/components/navigation/main-nav"
+import { LevelBadge } from "@/components/ui/level-badge"
 
 interface UserProfile {
   id: string
   full_name: string | null
   bio: string | null
   linkedin_url: string | null
+  rating_score: number
+  level: number
+  level_name: string
   user_skills: Array<{
     id: string
     level: string
@@ -41,14 +45,15 @@ export default function DiscoverContent({ user }: { user: User }) {
       const { data: skillsData } = await supabase.from("skills").select("*").order("name")
       setSkills(skillsData || [])
 
-      const { data: usersData } = await supabase
+      const { data: profiles } = await supabase
         .from("profiles")
-        .select("*, user_skills(*, skill:skills(name))")
+        .select("id, full_name, bio, linkedin_url, rating_score, level, level_name, user_skills(*, skill:skills(name))")
         .neq("id", user.id)
-        .order("full_name")
+        .order("rating_score", { ascending: false })
+        .order("created_at", { ascending: false })
 
-      setUsers((usersData || []) as UserProfile[])
-      setFilteredUsers((usersData || []) as UserProfile[])
+      setUsers((profiles || []) as UserProfile[])
+      setFilteredUsers((profiles || []) as UserProfile[])
       setLoading(false)
     }
     fetchData()
@@ -234,8 +239,19 @@ export default function DiscoverContent({ user }: { user: User }) {
                       <h3 className="font-semibold text-foreground truncate">
                         {profile.full_name || "Anonymous"}
                       </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <LevelBadge
+                          level={profile.level || 1}
+                          levelName={profile.level_name || 'Newcomer'}
+                          size="sm"
+                          showLevel={false}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          ⭐ {profile.rating_score || 0} pts
+                        </span>
+                      </div>
                       {profile.bio && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5">
                           {profile.bio}
                         </p>
                       )}

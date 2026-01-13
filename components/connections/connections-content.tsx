@@ -133,7 +133,16 @@ export default function ConnectionsContent({ user }: { user: User }) {
         .eq("id", connectionId)
 
       if (error) throw error
-      toast({ title: "Success", description: "Connection accepted!" })
+
+      // Award points for accepting connection
+      await supabase.rpc('award_points', {
+        p_user_id: user.id,
+        p_activity_type: 'connection_accepted',
+        p_points: 5,
+        p_description: 'Accepted connection request'
+      })
+
+      toast({ title: "Success", description: "Connection accepted! +5 points" })
       fetchConnections()
     } catch (error) {
       toast({ title: "Error", description: "Failed to accept connection", variant: "destructive" })
