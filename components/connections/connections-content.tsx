@@ -9,7 +9,13 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2, Trash2 } from "lucide-react"
+import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2, Trash2, MoreVertical } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
 
@@ -306,25 +312,33 @@ export default function ConnectionsContent({ user }: { user: User }) {
                       </div>
 
                       <div className="flex gap-2">
-                        <Link href={`/chat/${connection.id}`}>
-                          <Button size="sm" variant={(connection.unread_count || 0) > 0 ? "default" : "outline"} className="gap-2 transition-all">
+                        <Link href={`/chat/${connection.id}`} className="flex-1">
+                          <Button className="gap-2 transition-all w-full">
                             <MessageSquare className="w-4 h-4" />
-                            <span className="hidden sm:inline">Message</span>
+                            Message
                           </Button>
                         </Link>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteConnection(connection.id)}
-                          disabled={deletingId === connection.id}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
-                        >
-                          {deletingId === connection.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            "Disconnect"
-                          )}
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="outline">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteConnection(connection.id)}
+                              disabled={deletingId === connection.id}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              {deletingId === connection.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              ) : (
+                                <Trash2 className="w-4 h-4 mr-2" />
+                              )}
+                              Disconnect
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </CardContent>
