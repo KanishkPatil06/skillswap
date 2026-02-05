@@ -13,7 +13,6 @@ import { MessageBubble } from "./message-bubble"
 import { DateSeparator } from "./date-separator"
 import { TypingIndicator } from "./typing-indicator"
 import { FileUploadButton } from "./file-upload-button"
-import { NoteDialog } from "./note-dialog"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
 import {
@@ -379,34 +378,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
     }
   }
 
-  const handleNoteCreate = async (title: string, content: string) => {
-    if (!connection) return
 
-    try {
-      const { error } = await supabase.from("chat_messages").insert({
-        connection_id: connectionId,
-        sender_id: user.id,
-        content: '', // Empty content for note messages
-        message_type: 'note',
-        note_title: title,
-        note_content: content,
-      })
-
-      if (error) throw error
-
-      toast({
-        title: "Note created",
-        description: "Your note has been shared",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create note",
-        variant: "destructive",
-      })
-      throw error
-    }
-  }
 
   // Handler functions for menu actions
   const handlePinChat = () => {
@@ -654,10 +626,6 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
         <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
           <FileUploadButton
             onFileSelect={handleFileUpload}
-            disabled={sending}
-          />
-          <NoteDialog
-            onSave={handleNoteCreate}
             disabled={sending}
           />
           <Input
