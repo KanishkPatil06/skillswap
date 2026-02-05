@@ -25,6 +25,7 @@ export function VoiceCallButton({
 
     const handleStartCall = async () => {
         try {
+            console.log('🔵 Starting call...')
             setIsInitiating(true)
 
             // Get current user
@@ -35,6 +36,8 @@ export function VoiceCallButton({
             if (!user) {
                 throw new Error("Not authenticated")
             }
+
+            console.log('🔵 Creating call room for:', receiverName)
 
             // Create call room
             const response = await fetch('/api/calls/create-room', {
@@ -49,12 +52,15 @@ export function VoiceCallButton({
 
             if (!response.ok) {
                 const errorData = await response.json()
+                console.error('❌ API Error:', errorData)
                 throw new Error(errorData.error || 'Failed to start call')
             }
 
             const { roomUrl, callId } = await response.json()
+            console.log('✅ Call room created:', { roomUrl, callId })
 
             // Notify the other user via Supabase Realtime
+            console.log('🔵 Sending call notification to:', receiverId)
             await supabase
                 .channel(`user:${receiverId}`)
                 .send({
@@ -70,14 +76,16 @@ export function VoiceCallButton({
                 })
 
             // Open call modal
+            console.log('🔵 Opening call modal...')
             onCallInitiated(roomUrl, callId)
 
             toast({
                 title: "Calling...",
                 description: `Calling ${receiverName}`,
             })
+            console.log('✅ Call initiated successfully')
         } catch (error: any) {
-            console.error('Error starting call:', error)
+            console.error('❌ Error starting call:', error)
             toast({
                 title: "Call failed",
                 description: error.message || "Failed to start call",
