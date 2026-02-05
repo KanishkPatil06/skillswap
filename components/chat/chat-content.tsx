@@ -8,12 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Send, ArrowDown } from "lucide-react"
+import { ArrowLeft, Send, ArrowDown, MoreVertical, Pin, BellOff, User as UserIcon, Trash2, Ban, UserX } from "lucide-react"
 import { MessageBubble } from "./message-bubble"
 import { DateSeparator } from "./date-separator"
 import { TypingIndicator } from "./typing-indicator"
+import { FileUploadButton } from "./file-upload-button"
+import { NoteDialog } from "./note-dialog"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface ChatMessage {
   id: string
@@ -21,6 +30,13 @@ interface ChatMessage {
   sender_id: string
   created_at: string
   read_at?: string | null
+  message_type?: 'text' | 'file' | 'note'
+  file_url?: string | null
+  file_name?: string | null
+  file_size?: number | null
+  file_type?: string | null
+  note_title?: string | null
+  note_content?: string | null
 }
 
 interface ConnectionData {
@@ -39,6 +55,8 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   const [sending, setSending] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -77,6 +95,56 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       )
   }
 
+  // Helper function to generate signed URLs for file messages
+  const processFileMessages = async (messages: ChatMessage[]) => {
+    console.log('🔍 Processing file messages:', messages.filter(m => m.message_type === 'file'))
+
+    const processedMessages = await Promise.all(
+      messages.map(async (msg) => {
+        if (msg.message_type === 'file' && msg.file_url) {
+          console.log('📁 Processing file message:', msg.id, 'Original file_url:', msg.file_url)
+
+          // Extract file path from URL if it's a full URL, or use as-is if it's already a path
+          let filePath = msg.file_url
+          if (filePath.includes('/storage/v1/object/')) {
+            // Extract path from public URL format
+            const match = filePath.match(/\/chat-files\/(.+)$/)
+            if (match) filePath = match[1]
+            console.log('📦 Extracted from public URL:', filePath)
+          } else if (filePath.includes('/sign/')) {
+            // Extract path from signed URL format
+            const match = filePath.match(/\/chat-files\/(.+?)\?/)
+            if (match) filePath = match[1]
+            console.log('🔐 Extracted from signed URL:', filePath)
+          } else {
+            console.log('📂 Using path as-is:', filePath)
+          }
+
+          // Generate fresh signed URL
+          console.log('🔑 Generating signed URL for:', filePath)
+          const { data, error } = await supabase.storage
+            .from('chat-files')
+            .createSignedUrl(filePath, 3600)
+
+          if (error) {
+            console.error('❌ Error generating signed URL:', error)
+          }
+
+          if (data && !error) {
+            console.log('✅ Signed URL generated successfully')
+            return { ...msg, file_url: data.signedUrl }
+          } else {
+            console.warn('⚠️ Failed to generate signed URL, keeping original')
+          }
+        }
+        return msg
+      })
+    )
+
+    console.log('✅ Processed messages:', processedMessages.filter(m => m.message_type === 'file'))
+    return processedMessages
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: connData } = await supabase
@@ -106,7 +174,9 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
         .eq("connection_id", connectionId)
         .order("created_at", { ascending: true })
 
-      setMessages((messagesData || []) as ChatMessage[])
+      // Process file messages to generate signed URLs
+      const processedMessages = await processFileMessages((messagesData || []) as ChatMessage[])
+      setMessages(processedMessages)
       setLoading(false)
 
       setTimeout(() => scrollToBottom("auto"), 100)
@@ -133,17 +203,22 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           table: "chat_messages",
           filter: `connection_id=eq.${connectionId}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log("New message received:", payload)
           const newMessage = payload.new as ChatMessage
+
+          // Process file message to get signed URL
+          const processedMessages = await processFileMessages([newMessage])
+          const processedMessage = processedMessages[0]
+
           // Prevent duplicate messages - check if message already exists
           setMessages((prev) => {
-            const exists = prev.some((msg) => msg.id === newMessage.id)
+            const exists = prev.some((msg) => msg.id === processedMessage.id)
             if (exists) {
               console.log("Message already exists, skipping duplicate")
               return prev
             }
-            return [...prev, newMessage]
+            return [...prev, processedMessage]
           })
           setTimeout(() => scrollToBottom(), 100)
           setTimeout(() => markMessagesAsRead(), 500)
@@ -228,6 +303,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
         connection_id: connectionId,
         sender_id: user.id,
         content: newMessage.trim(),
+        message_type: 'text',
       })
 
       if (error) throw error
@@ -240,6 +316,157 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       toast({ title: "Error", description: "Failed to send message", variant: "destructive" })
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleFileUpload = async (file: File) => {
+    if (!connection) return
+
+    try {
+      console.log('📤 Starting file upload:', file.name, 'Size:', file.size, 'Type:', file.type)
+
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${connectionId}/${Date.now()}.${fileExt}`
+
+      console.log('📂 Upload path:', fileName)
+      console.log('🪣 Bucket: chat-files')
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('chat-files')
+        .upload(fileName, file)
+
+      if (uploadError) {
+        console.error('❌ Storage upload error:', uploadError)
+        console.error('Error details:', JSON.stringify(uploadError, null, 2))
+        throw uploadError
+      }
+
+      console.log('✅ File uploaded to storage:', uploadData)
+
+      // Store just the file path in database (not the URL)
+      // We'll generate signed URLs dynamically when displaying messages
+      console.log('💾 Inserting message to database...')
+
+      // Create message with file path (not URL - we generate signed URLs when displaying)
+      const { data: messageData, error: messageError } = await supabase.from("chat_messages").insert({
+        connection_id: connectionId,
+        sender_id: user.id,
+        content: '', // Empty content for file messages
+        message_type: 'file',
+        file_url: fileName, // Store just the path, not the full URL
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+      })
+
+      if (messageError) {
+        console.error('❌ Database insert error:', messageError)
+        throw messageError
+      }
+
+      console.log('✅ Message saved to database:', messageData)
+
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been shared`,
+      })
+    } catch (error) {
+      console.error('❌ File upload error:', error)
+      console.error('Error type:', typeof error)
+      console.error('Error keys:', error ? Object.keys(error) : 'null/undefined')
+      throw error // Re-throw to let FileUploadButton handle the error toast
+    }
+  }
+
+  const handleNoteCreate = async (title: string, content: string) => {
+    if (!connection) return
+
+    try {
+      const { error } = await supabase.from("chat_messages").insert({
+        connection_id: connectionId,
+        sender_id: user.id,
+        content: '', // Empty content for note messages
+        message_type: 'note',
+        note_title: title,
+        note_content: content,
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Note created",
+        description: "Your note has been shared",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create note",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  // Handler functions for menu actions
+  const handlePinChat = () => {
+    setIsPinned(!isPinned)
+    toast({
+      title: isPinned ? "Chat unpinned" : "Chat pinned",
+      description: isPinned ? "Chat removed from pinned conversations" : "Chat pinned to top of your conversations",
+    })
+  }
+
+  const handleMuteNotifications = () => {
+    setIsMuted(!isMuted)
+    toast({
+      title: isMuted ? "Notifications enabled" : "Notifications muted",
+      description: isMuted ? "You will receive notifications from this chat" : "You won't receive notifications from this chat",
+    })
+  }
+
+  const handleClearChat = async () => {
+    if (!confirm("Are you sure you want to clear all messages? This cannot be undone.")) return
+
+    try {
+      const { error } = await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("connection_id", connectionId)
+
+      if (error) throw error
+
+      setMessages([])
+      toast({ title: "Success", description: "Chat history cleared" })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to clear chat", variant: "destructive" })
+    }
+  }
+
+  const handleBlockUser = async () => {
+    if (!confirm("Are you sure you want to block this user? You won't be able to message each other.")) return
+
+    toast({
+      title: "Feature coming soon",
+      description: "User blocking will be available in a future update",
+    })
+  }
+
+  const handleDisconnect = async () => {
+    if (!confirm("Are you sure you want to disconnect? This will end your connection with this user.")) return
+
+    try {
+      const { error } = await supabase
+        .from("connections")
+        .delete()
+        .eq("id", connectionId)
+
+      if (error) throw error
+
+      toast({ title: "Disconnected", description: "Connection removed successfully" })
+      window.location.href = "/connections"
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to disconnect", variant: "destructive" })
     }
   }
 
@@ -317,10 +544,46 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
             </Button>
           </Link>
           <div className="text-center">
-            <h1 className="text-lg font-semibold">{connection.profile?.full_name || "Chat"}</h1>
+            <h1 className="text-lg font-semibold">{connection?.profile?.full_name || "Chat"}</h1>
             {isTyping && <p className="text-xs text-muted-foreground">typing...</p>}
           </div>
-          <div className="w-20" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="shrink-0">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handlePinChat}>
+                <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+                {isPinned ? "Unpin Chat" : "Pin Chat"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMuteNotifications}>
+                <BellOff className="w-4 h-4" />
+                {isMuted ? "Unmute" : "Mute Notifications"}
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/profile/${connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}`}>
+                  <UserIcon className="w-4 h-4" />
+                  View Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleClearChat}>
+                <Trash2 className="w-4 h-4" />
+                Clear Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBlockUser}>
+                <Ban className="w-4 h-4" />
+                Block User
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDisconnect} variant="destructive">
+                <UserX className="w-4 h-4" />
+                Disconnect
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -339,7 +602,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
               <div>
                 <h3 className="font-semibold text-lg mb-1">No messages yet</h3>
                 <p className="text-muted-foreground text-sm">
-                  Start a conversation with {connection.profile?.full_name}
+                  Start a conversation with {connection?.profile?.full_name}
                 </p>
               </div>
             </div>
@@ -354,8 +617,15 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
                       content={message.content}
                       timestamp={parseStringAsUTC(message.created_at)}
                       isOwn={message.sender_id === user.id}
-                      senderName={connection.profile?.full_name}
+                      senderName={connection?.profile?.full_name}
                       isRead={!!message.read_at}
+                      messageType={message.message_type as 'text' | 'file' | 'note' | undefined}
+                      fileUrl={message.file_url || undefined}
+                      fileName={message.file_name || undefined}
+                      fileSize={message.file_size || undefined}
+                      fileType={message.file_type || undefined}
+                      noteTitle={message.note_title || undefined}
+                      noteContent={message.note_content || undefined}
                     />
                   ))}
                 </div>
@@ -364,7 +634,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           )}
           {isTyping && (
             <div className="flex justify-start">
-              <TypingIndicator userName={connection.profile?.full_name} />
+              <TypingIndicator userName={connection?.profile?.full_name} />
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -382,6 +652,14 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
         {/* Message Input */}
         <form onSubmit={handleSendMessage} className="flex gap-2 items-end">
+          <FileUploadButton
+            onFileSelect={handleFileUpload}
+            disabled={sending}
+          />
+          <NoteDialog
+            onSave={handleNoteCreate}
+            disabled={sending}
+          />
           <Input
             value={newMessage}
             onChange={(e) => {
@@ -408,6 +686,6 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           </Button>
         </form>
       </div>
-    </div>
+    </div >
   )
 }

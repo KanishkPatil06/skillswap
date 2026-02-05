@@ -280,11 +280,6 @@ export default function ConnectionsContent({ user }: { user: User }) {
                           <h3 className="font-semibold text-foreground truncate">
                             {connection.profile?.full_name || "User"}
                           </h3>
-                          {connection.unread_count && connection.unread_count > 0 ? (
-                            <Badge variant="destructive" className="h-5 min-w-5 rounded-full px-1 flex items-center justify-center text-[10px]">
-                              {connection.unread_count}
-                            </Badge>
-                          ) : null}
                         </div>
 
                         {/* Last Message or Bio */}
