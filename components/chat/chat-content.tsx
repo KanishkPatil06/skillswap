@@ -529,31 +529,45 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   const messageGroups = groupMessagesByDate(messages)
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex flex-col h-screen bg-background">
       <MainNav user={user} />
 
-      {/* Chat Header */}
-      <div className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/connections">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-          </Link>
-          <div className="text-center">
-            <h1 className="text-lg font-semibold">{connection?.profile?.full_name || "Chat"}</h1>
-            {isTyping && <p className="text-xs text-muted-foreground">typing...</p>}
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-background border-b">
+        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto w-full">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Link href="/connections">
+              <Button variant="ghost" size="icon" className="shrink-0">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-semibold truncate">
+              {connection?.profile?.full_name || "Chat"}
+            </h1>
+            {/* Voice Call Button */}
+            <VoiceCallButton
+              connectionId={connectionId}
+              receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
+              receiverName={connection?.profile?.full_name || "User"}
+              onCallInitiated={(roomUrl, callId) => {
+                setCallRoomUrl(roomUrl)
+                setCallId(callId)
+                setIsCallModalOpen(true)
+              }}
+              disabled={!connection}
+            />
           </div>
+
+          {/* Three Dots Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="shrink-0">
+              <Button variant="ghost" size="icon" className="shrink-0">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handlePinChat}>
-                <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+                <Pin className="w-4 h-4" />
                 {isPinned ? "Unpin Chat" : "Pin Chat"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleMuteNotifications}>
@@ -566,18 +580,6 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
                   View Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <VoiceCallButton
-                connectionId={connectionId}
-                receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
-                receiverName={connection?.profile?.full_name || "User"}
-                onCallInitiated={(roomUrl, callId) => {
-                  setCallRoomUrl(roomUrl)
-                  setCallId(callId)
-                  setIsCallModalOpen(true)
-                }}
-                disabled={!connection}
-              />
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleClearChat}>
                 <Trash2 className="w-4 h-4" />
@@ -596,6 +598,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           </DropdownMenu>
         </div>
       </div>
+
 
       {/* Messages Container */}
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 flex flex-col overflow-hidden relative">
