@@ -52,7 +52,7 @@ export function IncomingCallNotification({
 
     return (
         <Dialog open={isOpen}>
-            <DialogContent className="sm:max-w-lg border-2">
+            <DialogContent className="sm:max-w-lg border-2 bg-white dark:bg-gray-950">
                 <DialogHeader className="pb-2">
                     <DialogTitle className="text-center text-xl font-bold bg-gradient-to-r from-green-600 to-primary bg-clip-text text-transparent">
                         📞 Incoming Call

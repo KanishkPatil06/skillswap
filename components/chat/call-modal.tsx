@@ -115,7 +115,7 @@ export function CallModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && endCall('ended')}>
-            <DialogContent className="sm:max-w-lg border-2 bg-card">
+            <DialogContent className="sm:max-w-lg border-2 bg-white dark:bg-gray-950">
                 <DialogHeader className="pb-2">
                     <DialogTitle className="text-center text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                         {callStatus === 'connecting' ? '📞 Connecting...' :
