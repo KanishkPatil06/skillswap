@@ -13,6 +13,9 @@ import { MessageBubble } from "./message-bubble"
 import { DateSeparator } from "./date-separator"
 import { TypingIndicator } from "./typing-indicator"
 import { FileUploadButton } from "./file-upload-button"
+import { VoiceCallButton } from "./voice-call-button"
+import { CallModal } from "./call-modal"
+import { IncomingCallNotification } from "./incoming-call-notification"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
 import {
@@ -56,6 +59,13 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
+
+  // Voice call state
+  const [isCallModalOpen, setIsCallModalOpen] = useState(false)
+  const [callRoomUrl, setCallRoomUrl] = useState("")
+  const [callId, setCallId] = useState("")
+  const [incomingCall, setIncomingCall] = useState<any>(null)
+  const [showIncomingCall, setShowIncomingCall] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -184,6 +194,22 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
     fetchData()
   }, [user.id, connectionId, supabase, toast])
+
+  // Listen for incoming calls
+  useEffect(() => {
+    const callChannel = supabase
+      .channel(`user:${user.id}`)
+      .on('broadcast', { event: 'incoming_call' }, (payload) => {
+        console.log('Incoming call:', payload)
+        setIncomingCall(payload.payload)
+        setShowIncomingCall(true)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(callChannel)
+    }
+  }, [user.id])
 
   // Separate effect for subscriptions - only runs once connection is loaded
   useEffect(() => {
@@ -541,6 +567,18 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <VoiceCallButton
+                connectionId={connectionId}
+                receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
+                receiverName={connection?.profile?.full_name || "User"}
+                onCallInitiated={(roomUrl, callId) => {
+                  setCallRoomUrl(roomUrl)
+                  setCallId(callId)
+                  setIsCallModalOpen(true)
+                }}
+                disabled={!connection}
+              />
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleClearChat}>
                 <Trash2 className="w-4 h-4" />
                 Clear Chat
@@ -654,6 +692,39 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           </Button>
         </form>
       </div>
+
+      {/* Call Modals */}
+      <CallModal
+        isOpen={isCallModalOpen}
+        onClose={() => setIsCallModalOpen(false)}
+        roomUrl={callRoomUrl}
+        callId={callId}
+        remoteName={connection?.profile?.full_name || "User"}
+      />
+
+      <IncomingCallNotification
+        isOpen={showIncomingCall}
+        callerName={incomingCall?.callerName || "User"}
+        onAccept={() => {
+          setCallRoomUrl(incomingCall.roomUrl)
+          setCallId(incomingCall.callId)
+          setShowIncomingCall(false)
+          setIsCallModalOpen(true)
+        }}
+        onDecline={async () => {
+          await fetch('/api/calls/end', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              callId: incomingCall.callId,
+              status: 'rejected',
+              duration: 0,
+            }),
+          })
+          setShowIncomingCall(false)
+          setIncomingCall(null)
+        }}
+      />
     </div >
   )
 }
