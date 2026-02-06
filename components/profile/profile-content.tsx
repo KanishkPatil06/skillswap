@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { MainNav } from "@/components/navigation/main-nav"
 import { useToast } from "@/hooks/use-toast"
-import { User as UserIcon, Briefcase, X, Plus, Save, Loader2, Camera } from "lucide-react"
+import { User as UserIcon, Briefcase, X, Plus, Save, Loader2, Camera, CheckCircle2, Award } from "lucide-react"
 import { parseStringAsUTC } from "@/lib/utils"
+import { SkillAssessmentModal } from "./skill-assessment-modal"
 
 interface Profile {
     id: string
@@ -30,6 +31,7 @@ interface UserSkill {
     skill_id: string
     level: string
     skill?: { name: string }
+    verified_at?: string | null
 }
 
 export default function ProfileContent({ user }: { user: User }) {
@@ -44,6 +46,8 @@ export default function ProfileContent({ user }: { user: User }) {
     const [addingSkill, setAddingSkill] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [removingSkillId, setRemovingSkillId] = useState<string | null>(null)
+    const [assessmentModalOpen, setAssessmentModalOpen] = useState(false)
+    const [assessmentSkill, setAssessmentSkill] = useState<{ id: string, name: string, level: string } | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const supabase = createClient()
     const { toast } = useToast()
@@ -211,6 +215,27 @@ export default function ProfileContent({ user }: { user: User }) {
             toast({ title: "Error", description: "Failed to remove skill", variant: "destructive" })
         } finally {
             setRemovingSkillId(null)
+        }
+    }
+
+    const handleVerifySkill = (skill: UserSkill) => {
+        if (!skill.skill) return
+        setAssessmentSkill({
+            id: skill.id,
+            name: skill.skill.name,
+            level: skill.level
+        })
+        setAssessmentModalOpen(true)
+    }
+
+    const handleVerificationSuccess = () => {
+        // Optimistic update
+        if (assessmentSkill) {
+            setUserSkills(prev => prev.map(s =>
+                s.id === assessmentSkill.id
+                    ? { ...s, verified_at: new Date().toISOString() }
+                    : s
+            ))
         }
     }
 
@@ -426,17 +451,37 @@ export default function ProfileContent({ user }: { user: User }) {
                             {userSkills.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {userSkills.map((userSkill) => (
-                                        <Badge
-                                            key={userSkill.id}
-                                            variant="secondary"
-                                            className={`${getLevelColor(userSkill.level)} text-sm py-1.5 px-3 gap-2 border-0`}
-                                        >
-                                            {userSkill.skill?.name}
-                                            <span className="text-xs opacity-70">• {userSkill.level}</span>
+                                        <div key={userSkill.id} className="relative group/skill">
+                                            <Badge
+                                                variant="secondary"
+                                                className={`${getLevelColor(userSkill.level)} text-sm py-1.5 px-3 gap-2 border-0 pr-8`}
+                                            >
+                                                {userSkill.skill?.name}
+                                                <span className="text-xs opacity-70">• {userSkill.level}</span>
+
+                                                {userSkill.verified_at && (
+                                                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full text-[10px] font-medium ml-1">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        Verified
+                                                    </div>
+                                                )}
+
+                                                {!userSkill.verified_at && (
+                                                    <button
+                                                        onClick={() => handleVerifySkill(userSkill)}
+                                                        className="ml-1 opacity-60 hover:opacity-100 hover:text-primary transition-opacity"
+                                                        title="Verify this skill"
+                                                    >
+                                                        <Award className="w-4 h-4" />
+                                                    </button>
+                                                )}
+
+                                            </Badge>
                                             <button
                                                 onClick={() => handleRemoveSkill(userSkill.id)}
                                                 disabled={removingSkillId === userSkill.id}
-                                                className="ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover/skill:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-background"
+                                                title="Remove skill"
                                             >
                                                 {removingSkillId === userSkill.id ? (
                                                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -444,7 +489,7 @@ export default function ProfileContent({ user }: { user: User }) {
                                                     <X className="w-3 h-3" />
                                                 )}
                                             </button>
-                                        </Badge>
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -458,6 +503,16 @@ export default function ProfileContent({ user }: { user: User }) {
                     </Card>
                 </div>
             </main>
+            {assessmentSkill && (
+                <SkillAssessmentModal
+                    open={assessmentModalOpen}
+                    onOpenChange={setAssessmentModalOpen}
+                    skillId={assessmentSkill.id}
+                    skillName={assessmentSkill.name}
+                    level={assessmentSkill.level}
+                    onVerified={handleVerificationSuccess}
+                />
+            )}
         </div>
     )
 }

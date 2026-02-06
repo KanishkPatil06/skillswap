@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { UserPlus, ExternalLink, Loader2, Search, Users } from "lucide-react"
+import { UserPlus, ExternalLink, Loader2, Search, Users, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { MainNav } from "@/components/navigation/main-nav"
 import { LevelBadge } from "@/components/ui/level-badge"
+import { SkillMatchModal } from "./skill-match-modal"
 
 interface UserProfile {
   id: string
@@ -37,6 +38,7 @@ export default function DiscoverContent({ user }: { user: User }) {
   const [selectedLevel, setSelectedLevel] = useState("")
   const [loading, setLoading] = useState(true)
   const [connectingId, setConnectingId] = useState<string | null>(null)
+  const [matchModalOpen, setMatchModalOpen] = useState(false)
   const supabase = createClient()
   const { toast } = useToast()
 
@@ -219,6 +221,13 @@ export default function DiscoverContent({ user }: { user: User }) {
               <SelectItem value="Expert">Expert</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            onClick={() => setMatchModalOpen(true)}
+            className="gradient-primary gap-2 hover:opacity-90"
+          >
+            <Sparkles className="w-4 h-4" />
+            Find AI Matches
+          </Button>
         </div>
 
         {/* User Grid */}
@@ -314,6 +323,13 @@ export default function DiscoverContent({ user }: { user: User }) {
           </div>
         )}
       </main>
+
+      {/* AI Skill Match Modal */}
+      <SkillMatchModal
+        open={matchModalOpen}
+        onOpenChange={setMatchModalOpen}
+        currentUser={user}
+      />
     </div>
   )
 }
