@@ -605,7 +605,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
         <div
           ref={messagesContainerRef}
           onScroll={checkScrollPosition}
-          className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scroll-smooth"
+          className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scroll-smooth border border-border/50 dark:border-border rounded-lg p-4 bg-muted/20"
         >
           {messageGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">

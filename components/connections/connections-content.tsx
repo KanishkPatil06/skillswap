@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2, Trash2, MoreVertical } from "lucide-react"
+import { CheckCircle, XCircle, MessageSquare, Clock, Users, Loader2, Trash2, MoreVertical, Calendar, Star } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
+import { SessionBookingDialog } from "@/components/sessions/session-booking-dialog"
+import { RateUserDialog } from "@/components/rating/rate-user-dialog"
 
 interface Connection {
   id: string
@@ -313,9 +315,14 @@ export default function ConnectionsContent({ user }: { user: User }) {
 
                       <div className="flex gap-2">
                         <Link href={`/chat/${connection.id}`} className="flex-1">
-                          <Button className="gap-2 transition-all w-full">
+                          <Button className="gap-2 transition-all w-full relative">
                             <MessageSquare className="w-4 h-4" />
                             Message
+                            {(connection.unread_count || 0) > 0 && (
+                              <Badge className="ml-1 px-1.5 min-w-[20px] h-5 text-xs bg-destructive border-0">
+                                {connection.unread_count}
+                              </Badge>
+                            )}
                           </Button>
                         </Link>
                         <DropdownMenu>
@@ -325,6 +332,27 @@ export default function ConnectionsContent({ user }: { user: User }) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <SessionBookingDialog
+                              connectionId={connection.id}
+                              participantId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
+                              participantName={connection.profile?.full_name || "User"}
+                              trigger={
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Calendar className="w-4 h-4 mr-2" />
+                                  Book Session
+                                </DropdownMenuItem>
+                              }
+                            />
+                            <RateUserDialog
+                              userId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
+                              userName={connection.profile?.full_name || "User"}
+                              trigger={
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Star className="w-4 h-4 mr-2" />
+                                  Rate User
+                                </DropdownMenuItem>
+                              }
+                            />
                             <DropdownMenuItem
                               onClick={() => handleDeleteConnection(connection.id)}
                               disabled={deletingId === connection.id}

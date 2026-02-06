@@ -11,6 +11,7 @@ interface MatchCardProps {
         id: string
         full_name: string | null
         bio: string | null
+        avatar_url?: string | null
     }
     matchScore: number
     theyCanTeach: string[]
@@ -59,11 +60,19 @@ export function MatchCard({
                 {/* Header with Score */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div
-                            className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-foreground font-bold text-lg border-2 border-primary/30"
-                        >
-                            {getInitials(user.full_name)}
-                        </div>
+                        {user.avatar_url ? (
+                            <img
+                                src={user.avatar_url}
+                                alt={user.full_name || "User"}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-primary/30 shadow-sm"
+                            />
+                        ) : (
+                            <div
+                                className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-foreground font-bold text-lg border-2 border-primary/30"
+                            >
+                                {getInitials(user.full_name)}
+                            </div>
+                        )}
                         <div>
                             <h3 className="font-semibold text-lg text-foreground">
                                 {user.full_name || "Anonymous"}

@@ -28,49 +28,49 @@ export function InteractiveBackground() {
     return (
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
             {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/5" />
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/10 to-accent/10" />
 
-            {/* Animated mesh gradient */}
-            <div className="absolute inset-0 opacity-30">
+            {/* Animated mesh gradient - Primary Purple - MUCH MORE VISIBLE */}
+            <div className="absolute inset-0 opacity-60">
                 <div
-                    className="absolute w-[600px] h-[600px] rounded-full blur-3xl transition-all duration-1000 ease-out"
+                    className="absolute w-[700px] h-[700px] rounded-full blur-2xl transition-all duration-1000 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(147, 51, 234, 0.4) 0%, transparent 70%)",
-                        left: `${mousePosition.x - 300}px`,
-                        top: `${mousePosition.y - 300}px`,
-                        opacity: isHovering ? 1 : 0.5,
+                        background: "radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.3) 50%, transparent 70%)",
+                        left: `${mousePosition.x - 350}px`,
+                        top: `${mousePosition.y - 350}px`,
+                        opacity: isHovering ? 1 : 0.7,
                     }}
                 />
             </div>
 
-            {/* Secondary gradient blob */}
-            <div className="absolute inset-0 opacity-20">
+            {/* Secondary gradient blob - Blue - MUCH MORE VISIBLE */}
+            <div className="absolute inset-0 opacity-50">
                 <div
-                    className="absolute w-[500px] h-[500px] rounded-full blur-3xl transition-all duration-700 ease-out"
+                    className="absolute w-[600px] h-[600px] rounded-full blur-2xl transition-all duration-700 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, transparent 70%)",
-                        left: `${mousePosition.x - 100}px`,
-                        top: `${mousePosition.y - 100}px`,
-                        opacity: isHovering ? 1 : 0.3,
+                        background: "radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0.4) 50%, transparent 70%)",
+                        left: `${mousePosition.x - 200}px`,
+                        top: `${mousePosition.y - 200}px`,
+                        opacity: isHovering ? 1 : 0.6,
                     }}
                 />
             </div>
 
-            {/* Tertiary gradient blob */}
-            <div className="absolute inset-0 opacity-15">
+            {/* Tertiary gradient blob - Pink - MUCH MORE VISIBLE */}
+            <div className="absolute inset-0 opacity-45">
                 <div
-                    className="absolute w-[700px] h-[700px] rounded-full blur-3xl transition-all duration-500 ease-out"
+                    className="absolute w-[800px] h-[800px] rounded-full blur-2xl transition-all duration-500 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%)",
-                        left: `${mousePosition.x + 100}px`,
-                        top: `${mousePosition.y + 100}px`,
-                        opacity: isHovering ? 1 : 0.4,
+                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, rgba(236, 72, 153, 0.3) 30%, transparent 70%)",
+                        left: `${mousePosition.x + 150}px`,
+                        top: `${mousePosition.y + 150}px`,
+                        opacity: isHovering ? 1 : 0.7,
                     }}
                 />
             </div>
 
             {/* Grid pattern overlay */}
-            <div className="absolute inset-0 opacity-[0.02]">
+            <div className="absolute inset-0 opacity-[0.03]">
                 <div
                     className="absolute inset-0"
                     style={{
@@ -88,7 +88,7 @@ export function InteractiveBackground() {
                 {[...Array(20)].map((_, i) => (
                     <div
                         key={i}
-                        className="absolute w-1 h-1 bg-primary/20 rounded-full animate-float"
+                        className="absolute w-1 h-1 bg-primary/30 rounded-full animate-float"
                         style={{
                             left: `${Math.random() * 100}%`,
                             top: `${Math.random() * 100}%`,

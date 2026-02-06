@@ -112,7 +112,7 @@ export function SkillMatchModal({ open, onOpenChange, currentUser }: SkillMatchM
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+            <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
                 <DialogHeader className="p-6 pb-4 border-b">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">

@@ -12,6 +12,7 @@ import { UserPlus, ExternalLink, Loader2, Search, Users, Sparkles } from "lucide
 import { useToast } from "@/hooks/use-toast"
 import { MainNav } from "@/components/navigation/main-nav"
 import { LevelBadge } from "@/components/ui/level-badge"
+import { OnlineIndicator } from "@/components/ui/online-indicator"
 import { SkillMatchModal } from "./skill-match-modal"
 
 interface UserProfile {
@@ -22,6 +23,7 @@ interface UserProfile {
   rating_score: number
   level: number
   level_name: string
+  is_online?: boolean
   user_skills: Array<{
     id: string
     level: string
@@ -49,7 +51,7 @@ export default function DiscoverContent({ user }: { user: User }) {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, bio, linkedin_url, rating_score, level, level_name, user_skills(*, skill:skills(name))")
+        .select("id, full_name, bio, linkedin_url, rating_score, level, level_name, is_online, user_skills(*, skill:skills(name))")
         .neq("id", user.id)
         .order("rating_score", { ascending: false })
         .order("created_at", { ascending: false })
@@ -241,8 +243,13 @@ export default function DiscoverContent({ user }: { user: User }) {
                 <CardContent className="p-5">
                   {/* User Header */}
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-lg shrink-0 group-hover:scale-105 transition-transform border border-border/30" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
-                      {getInitials(profile.full_name)}
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-lg shrink-0 group-hover:scale-105 transition-transform border border-border/30" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
+                        {getInitials(profile.full_name)}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5">
+                        <OnlineIndicator isOnline={profile.is_online} size="sm" />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground truncate">

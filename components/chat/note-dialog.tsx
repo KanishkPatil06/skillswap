@@ -56,7 +56,7 @@ export function NoteDialog({ onSave, disabled }: NoteDialogProps) {
                     <StickyNote className="w-4 h-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
+            <DialogContent className="sm:max-w-[525px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
                 <DialogHeader>
                     <DialogTitle>Create Note</DialogTitle>
                     <DialogDescription>

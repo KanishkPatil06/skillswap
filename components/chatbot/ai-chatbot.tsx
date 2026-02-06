@@ -118,7 +118,6 @@ export function AIChatbot() {
             >
                 <Bot className="h-8 w-8 text-white group-hover:scale-110 transition-transform" />
                 <span className="text-white font-semibold text-base">AI Chat</span>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
             </Button>
         )
     }

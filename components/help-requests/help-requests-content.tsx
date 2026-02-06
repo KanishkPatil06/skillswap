@@ -5,10 +5,12 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { MainNav } from "@/components/navigation/main-nav"
 import CreateHelpRequestDialog from "./create-help-request-dialog"
-import { Loader2 } from "lucide-react"
+import { Loader2, Filter, Check } from "lucide-react"
 import { parseStringAsUTC } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 interface HelpRequest {
   id: string
@@ -26,7 +28,10 @@ export default function HelpRequestsContent({ user }: { user: User }) {
   const [myRequests, setMyRequests] = useState<HelpRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const supabase = createClient()
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchHelpRequests()
@@ -36,19 +41,28 @@ export default function HelpRequestsContent({ user }: { user: User }) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "help_requests" }, (payload) => {
         fetchHelpRequests()
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "help_requests" }, (payload) => {
+        fetchHelpRequests()
+      })
       .subscribe()
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [user.id, supabase])
+  }, [user.id, supabase, showCompleted])
 
   const fetchHelpRequests = async () => {
-    const { data: allRequests } = await supabase
+    // Fetch all requests based on filter
+    let query = supabase
       .from("help_requests")
       .select("*, skill:skills(name), profile:profiles(full_name)")
-      .eq("status", "open")
       .order("created_at", { ascending: false })
+
+    if (!showCompleted) {
+      query = query.in("status", ["open", "in_progress"])
+    }
+
+    const { data: allRequests } = await query
 
     const { data: userRequests } = await supabase
       .from("help_requests")
@@ -64,6 +78,60 @@ export default function HelpRequestsContent({ user }: { user: User }) {
   const handleRequestCreated = () => {
     fetchHelpRequests()
     setShowCreateDialog(false)
+  }
+
+  const handleAcceptRequest = async (requestId: string) => {
+    setUpdatingStatus(requestId)
+    try {
+      const { error } = await supabase
+        .from("help_requests")
+        .update({ status: "in_progress" })
+        .eq("id", requestId)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "You've accepted this help request!",
+      })
+      fetchHelpRequests()
+    } catch (error) {
+      console.error("Error accepting request:", error)
+      toast({
+        title: "Error",
+        description: "Failed to accept help request",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
+  const handleCompleteRequest = async (requestId: string) => {
+    setUpdatingStatus(requestId)
+    try {
+      const { error } = await supabase
+        .from("help_requests")
+        .update({ status: "completed" })
+        .eq("id", requestId)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Help request marked as completed!",
+      })
+      fetchHelpRequests()
+    } catch (error) {
+      console.error("Error completing request:", error)
+      toast({
+        title: "Error",
+        description: "Failed to complete help request",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdatingStatus(null)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -97,7 +165,17 @@ export default function HelpRequestsContent({ user }: { user: User }) {
             <h1 className="text-3xl font-bold text-foreground mb-2">Help Requests</h1>
             <p className="text-muted-foreground">Browse community help requests or create your own</p>
           </div>
-          <CreateHelpRequestDialog onRequestCreated={handleRequestCreated} userId={user.id} />
+          <div className="flex gap-2">
+            <Button
+              variant={showCompleted ? "default" : "outline"}
+              onClick={() => setShowCompleted(!showCompleted)}
+              className="gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              {showCompleted ? "Hide Completed" : "Show Completed"}
+            </Button>
+            <CreateHelpRequestDialog onRequestCreated={handleRequestCreated} userId={user.id} />
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -122,6 +200,45 @@ export default function HelpRequestsContent({ user }: { user: User }) {
                       <p className="text-xs text-muted-foreground">
                         {parseStringAsUTC(request.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
                       </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      {request.user_id === user.id ? (
+                        // Owner can mark as completed
+                        request.status !== "completed" && request.status !== "closed" && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleCompleteRequest(request.id)}
+                            disabled={updatingStatus === request.id}
+                            className="gap-2 bg-purple-600 hover:bg-purple-700"
+                          >
+                            {updatingStatus === request.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                            Mark as Completed
+                          </Button>
+                        )
+                      ) : (
+                        // Non-owners can accept if status is open
+                        request.status === "open" && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAcceptRequest(request.id)}
+                            disabled={updatingStatus === request.id}
+                            className="gap-2"
+                          >
+                            {updatingStatus === request.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                            Accept Help Request
+                          </Button>
+                        )
+                      )}
                     </div>
                   </CardContent>
                 </Card>

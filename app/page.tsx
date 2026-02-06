@@ -49,10 +49,10 @@ export default async function LandingPage() {
               together through transparent, experience-based learning.
             </p>
 
+
             <div className="flex gap-4">
-              <LoginButton />
               <Link href="#features">
-                <Button variant="outline" size="lg" className="transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Button size="lg" className="gradient-primary hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
                   Explore Features
                 </Button>
               </Link>

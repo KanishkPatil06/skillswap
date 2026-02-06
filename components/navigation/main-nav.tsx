@@ -85,7 +85,7 @@ export function MainNav({ user }: { user: User }) {
     { label: "Dashboard", href: "/dashboard" },
     { label: "Discover", href: "/discover" },
     { label: "Help Requests", href: "/help-requests" },
-    { label: "Connections", href: "/connections", hasBadge: unreadCount > 0 },
+    { label: "Connections", href: "/connections" },
   ]
 
   return (
@@ -110,9 +110,6 @@ export function MainNav({ user }: { user: User }) {
                       }`}
                   >
                     {item.label}
-                    {item.hasBadge && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    )}
                   </Button>
                 </Link>
               )
@@ -146,9 +143,6 @@ export function MainNav({ user }: { user: User }) {
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            {unreadCount > 0 && !mobileOpen && (
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            )}
           </button>
         </div>
 
@@ -165,9 +159,6 @@ export function MainNav({ user }: { user: User }) {
                       }`}
                   >
                     {item.label}
-                    {item.hasBadge && (
-                      <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    )}
                   </Button>
                 </Link>
               )
