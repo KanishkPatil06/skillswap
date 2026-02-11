@@ -10,12 +10,16 @@ import { createClient } from "@/lib/supabase/client"
 import { Menu, X, LogOut } from "lucide-react"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
 
+import { useOnlineStatus } from "@/hooks/use-online-status"
+
 export function MainNav({ user }: { user: User }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
+
+  useOnlineStatus(user)
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -121,8 +125,9 @@ export function MainNav({ user }: { user: User }) {
               href="/profile"
               className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors"
             >
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-foreground text-xs font-medium border border-border/20" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.1)' }}>
+              <div className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center text-foreground text-xs font-medium border border-border/20" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.1)' }}>
                 {user.email?.charAt(0).toUpperCase()}
+                <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-background"></span>
               </div>
               {user.email}
             </Link>

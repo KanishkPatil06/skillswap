@@ -2,36 +2,38 @@
 
 import { useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { User } from "@supabase/supabase-js"
 
-export function useOnlineStatus(userId: string | undefined) {
+export function useOnlineStatus(user: User | null) {
     const supabase = createClient()
 
     useEffect(() => {
-        if (!userId) return
+        if (!user) return
 
-        // Update last_seen immediately when component mounts
-        const updatePresence = async () => {
-            await supabase.rpc('mark_user_online', { user_id_param: userId })
-        }
-
-        updatePresence()
-
-        // Update last_seen every 2 minutes while user is active
-        const interval = setInterval(updatePresence, 2 * 60 * 1000)
-
-        // Update on visibility change (tab becomes active)
-        const handleVisibilityChange = () => {
-            if (!document.hidden) {
-                updatePresence()
+        const updateLastSeen = async () => {
+            try {
+                await supabase
+                    .from("profiles")
+                    .update({ last_seen: new Date().toISOString() })
+                    .eq("id", user.id)
+            } catch (error) {
+                console.error("Error updating last seen:", error)
             }
         }
 
-        document.addEventListener('visibilitychange', handleVisibilityChange)
+        // Update immediately
+        updateLastSeen()
 
-        // Cleanup
+        // Update every 5 minutes
+        const interval = setInterval(updateLastSeen, 5 * 60 * 1000)
+
+        // Update on window focus
+        const handleFocus = () => updateLastSeen()
+        window.addEventListener("focus", handleFocus)
+
         return () => {
             clearInterval(interval)
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
+            window.removeEventListener("focus", handleFocus)
         }
-    }, [userId, supabase])
+    }, [user, supabase])
 }

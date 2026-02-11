@@ -43,28 +43,15 @@ export function InteractiveBackground() {
                 />
             </div>
 
-            {/* Secondary gradient blob - Blue - MUCH MORE VISIBLE */}
-            <div className="absolute inset-0 opacity-50">
-                <div
-                    className="absolute w-[600px] h-[600px] rounded-full blur-2xl transition-all duration-700 ease-out"
-                    style={{
-                        background: "radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0.4) 50%, transparent 70%)",
-                        left: `${mousePosition.x - 200}px`,
-                        top: `${mousePosition.y - 200}px`,
-                        opacity: isHovering ? 1 : 0.6,
-                    }}
-                />
-            </div>
-
-            {/* Tertiary gradient blob - Pink - MUCH MORE VISIBLE */}
+            {/* Tertiary gradient blob - Pink - MUCH MORE VISIBLE - PREFER INCOMING */}
             <div className="absolute inset-0 opacity-45">
                 <div
                     className="absolute w-[800px] h-[800px] rounded-full blur-2xl transition-all duration-500 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, rgba(236, 72, 153, 0.3) 30%, transparent 70%)",
-                        left: `${mousePosition.x + 150}px`,
-                        top: `${mousePosition.y + 150}px`,
-                        opacity: isHovering ? 1 : 0.7,
+                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, rgba(236, 72, 153, 0.3) 30%, transparent 80%)",
+                        left: `${mousePosition.x + 200}px`,
+                        top: `${mousePosition.y + 2000}px`,
+                        opacity: isHovering ? 1 : 0.6,
                     }}
                 />
             </div>
