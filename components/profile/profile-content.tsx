@@ -16,6 +16,7 @@ import { User as UserIcon, Briefcase, X, Plus, Save, Loader2, Camera, CheckCircl
 import { parseStringAsUTC } from "@/lib/utils"
 import { SkillAssessmentModal } from "./skill-assessment-modal"
 import { Switch } from "@/components/ui/switch"
+import { AvailabilitySettings } from "./availability-settings"
 import {
     Dialog,
     DialogContent,
@@ -24,6 +25,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { ReputationBadge } from "@/components/profile/ReputationBadge"
+import { ReviewList } from "@/components/reviews/ReviewList"
 
 interface Profile {
     id: string
@@ -34,6 +37,7 @@ interface Profile {
     email?: string
     created_at?: string
     is_public?: boolean
+    rating_score?: number
 }
 
 interface UserSkill {
@@ -366,6 +370,9 @@ export default function ProfileContent({ user }: { user: User }) {
                         <p className="text-xs text-muted-foreground mt-2">
                             Hover over avatar to change photo
                         </p>
+                        <div className="mt-3">
+                            <ReputationBadge score={profile?.rating_score || 0} />
+                        </div>
                     </div>
                 </div>
 
@@ -542,6 +549,17 @@ export default function ProfileContent({ user }: { user: User }) {
                         </CardContent>
                     </Card>
 
+                    {/* Availability Settings */}
+                    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-xl">Availability</CardTitle>
+                            <CardDescription>Manage your weekly schedule for sessions</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <AvailabilitySettings userId={user.id} />
+                        </CardContent>
+                    </Card>
+
                     {/* Privacy Settings */}
                     <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
                         <CardHeader>
@@ -571,6 +589,17 @@ export default function ProfileContent({ user }: { user: User }) {
                                     }}
                                 />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Reviews Section */}
+                    <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-xl">Your Reviews</CardTitle>
+                            <CardDescription>What others are saying about you</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ReviewList userId={user.id} />
                         </CardContent>
                     </Card>
 

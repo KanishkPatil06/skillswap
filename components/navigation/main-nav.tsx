@@ -90,6 +90,7 @@ export function MainNav({ user }: { user: User }) {
     { label: "Discover", href: "/discover" },
     { label: "Help Requests", href: "/help-requests" },
     { label: "Connections", href: "/connections" },
+    { label: "Sessions", href: "/sessions" },
   ]
 
   return (

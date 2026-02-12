@@ -55,18 +55,25 @@ export function SessionBookingDialog({
             // Combine date and time
             const scheduledAt = new Date(`${formData.date}T${formData.time}:00`)
 
-            const { data, error } = await supabase.rpc('create_session', {
-                p_connection_id: connectionId,
-                p_initiator_id: user.id,
-                p_participant_id: participantId,
-                p_title: formData.title,
-                p_description: formData.description,
-                p_skill_to_teach: formData.skill,
-                p_scheduled_at: scheduledAt.toISOString(),
-                p_duration_minutes: parseInt(formData.duration)
+            const response = await fetch('/api/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mentor_id: participantId,
+                    skill_name: formData.skill,
+                    scheduled_at: scheduledAt.toISOString(),
+                    duration_minutes: parseInt(formData.duration),
+                    notes: formData.description
+                }),
             })
 
-            if (error) throw error
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to book session")
+            }
 
             toast({
                 title: "Session Requested!",

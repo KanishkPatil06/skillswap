@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (fetchError || !userSkill) {
+            console.error("User skill lookup failed:", fetchError)
             return NextResponse.json({ error: "User skill not found" }, { status: 404 })
         }
 
@@ -36,33 +37,41 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized access to skill" }, { status: 403 })
         }
 
-        // Record the assessment attempt
-        const { error: assessmentError } = await supabase
-            .from("assessments")
-            .insert({
-                user_id: user.id,
-                skill_id: userSkill.skill_id,
-                score,
-                max_score: maxScore,
-                passed,
-                questions: questions, // Store questions context
-                answers: userAnswers,  // Store user's choices
-            })
+        // Record the assessment attempt (assessments table may not exist yet)
+        try {
+            const { error: assessmentError } = await supabase
+                .from("assessments")
+                .insert({
+                    user_id: user.id,
+                    skill_id: userSkill.skill_id,
+                    score,
+                    max_score: maxScore,
+                    passed,
+                    questions: questions,
+                    answers: userAnswers,
+                })
 
-        if (assessmentError) {
-            // Just log it, don't fail the request if history save fails (optional table)
-            console.error("Failed to save assessment history:", assessmentError)
+            if (assessmentError) {
+                console.warn("Failed to save assessment history (table may not exist):", assessmentError.message)
+            }
+        } catch (historyErr) {
+            console.warn("Assessment history save skipped:", historyErr)
         }
 
         // If passed, update the user_skill as verified
         if (passed) {
-            const { error: updateError } = await supabase
-                .from("user_skills")
-                .update({ verified_at: new Date().toISOString() })
-                .eq("id", userSkillId)
+            try {
+                const { error: updateError } = await supabase
+                    .from("user_skills")
+                    .update({ verified_at: new Date().toISOString() })
+                    .eq("id", userSkillId)
 
-            if (updateError) {
-                throw updateError
+                if (updateError) {
+                    // verified_at column may not exist yet - log but don't fail
+                    console.warn("Could not set verified_at (column may not exist):", updateError.message)
+                }
+            } catch (verifyErr) {
+                console.warn("Verified update skipped:", verifyErr)
             }
         }
 
