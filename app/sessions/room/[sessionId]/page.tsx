@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { VideoRoom } from "@/components/video/video-room"
 
-export default async function VideoPage({ params }: { params: { sessionId: string } }) {
+export default async function VideoPage({ params }: { params: Promise<{ sessionId: string }> }) {
+    const { sessionId } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -11,14 +12,14 @@ export default async function VideoPage({ params }: { params: { sessionId: strin
     // Fetch session to get the meeting link
     const { data: session } = await supabase
         .from("sessions")
-        .select("meeting_link, mentor_id, mentee_id")
-        .eq("id", params.sessionId)
+        .select("meeting_link, mentor_id, learner_id")
+        .eq("id", sessionId)
         .single()
 
     if (!session) notFound()
 
     // Verify access
-    if (session.mentor_id !== user.id && session.mentee_id !== user.id) {
+    if (session.mentor_id !== user.id && session.learner_id !== user.id) {
         redirect("/sessions")
     }
 
@@ -33,6 +34,6 @@ export default async function VideoPage({ params }: { params: { sessionId: strin
     }
 
     return (
-        <VideoRoom url={session.meeting_link} />
+        <VideoRoom url={session.meeting_link} sessionId={sessionId} />
     )
 }

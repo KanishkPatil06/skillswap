@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify user is part of the session
-        if (session.mentor_id !== user.id && session.mentee_id !== user.id) {
+        if (session.mentor_id !== user.id && session.learner_id !== user.id) {
             return NextResponse.json({ error: "Unauthorized access to this session" }, { status: 403 })
         }
 
