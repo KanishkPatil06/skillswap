@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { MapPin, ExternalLink, UserPlus, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe } from "lucide-react"
+import { MapPin, ExternalLink, UserPlus, CheckCircle, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe } from "lucide-react"
 import { ReviewList } from "../reviews/ReviewList"
 import { ReviewModal } from "../reviews/ReviewModal"
 import { EndorsementButton } from "../reviews/EndorsementButton"
 import { RatingStars } from "../reviews/RatingStars"
 import { ReputationBadge } from "../profile/ReputationBadge"
 import { BookSessionDialog } from "../sessions/book-session-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProfileViewModalProps {
     isOpen: boolean
@@ -22,6 +23,8 @@ interface ProfileViewModalProps {
     currentUser: any
     onConnect: (userId: string) => void
     isConnecting: boolean
+    isConnected: boolean
+    connectionId: string | null
 }
 
 export function ProfileViewModal({
@@ -30,9 +33,12 @@ export function ProfileViewModal({
     user,
     currentUser,
     onConnect,
-    isConnecting
+    isConnecting,
+    isConnected,
+    connectionId,
 }: ProfileViewModalProps) {
     const [reviewModalOpen, setReviewModalOpen] = useState(false)
+    const { toast } = useToast()
 
     if (!user) return null
 
@@ -151,20 +157,34 @@ export function ProfileViewModal({
                         <div className="flex gap-2">
                             <Button
                                 onClick={() => onConnect(user.id)}
-                                disabled={isConnecting}
+                                disabled={isConnecting || isConnected}
+                                variant={isConnected ? "secondary" : "default"}
                                 className="flex-1 gap-2"
                                 size="lg"
                             >
-                                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                                Connect
+                                {isConnecting ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : isConnected ? (
+                                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                ) : (
+                                    <UserPlus className="w-4 h-4" />
+                                )}
+                                {isConnected ? "Connected" : "Connect"}
                             </Button>
                             <Button
                                 variant="outline"
                                 size="lg"
-                                className="gap-2"
+                                className={`gap-2 ${!isConnected ? 'opacity-60' : ''}`}
                                 onClick={() => {
-                                    // Navigate to messages with this user
-                                    window.location.href = `/messages?user=${user.id}`
+                                    if (isConnected && connectionId) {
+                                        window.location.href = `/chat/${connectionId}`
+                                    } else {
+                                        toast({
+                                            title: "Not connected",
+                                            description: "Please connect first to start chatting.",
+                                            variant: "destructive",
+                                        })
+                                    }
                                 }}
                             >
                                 <MessageSquare className="w-4 h-4" />

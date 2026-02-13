@@ -40,10 +40,18 @@ interface UserProfile {
   isSaved?: boolean
 }
 
+interface MyConnection {
+  id: string
+  user_id: string
+  connected_user_id: string
+  status: string
+}
+
 export default function DiscoverContent({ user }: { user: User }) {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([])
   const [skills, setSkills] = useState<any[]>([])
+  const [myConnections, setMyConnections] = useState<MyConnection[]>([])
   const [loading, setLoading] = useState(true)
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -119,6 +127,15 @@ export default function DiscoverContent({ user }: { user: User }) {
 
         setUsers(typedProfiles)
         setFilteredUsers(typedProfiles)
+
+        // 3. Fetch current user's accepted connections
+        const { data: connections } = await supabase
+          .from("connections")
+          .select("id, user_id, connected_user_id, status")
+          .or(`user_id.eq.${user.id},connected_user_id.eq.${user.id}`)
+          .eq("status", "accepted")
+
+        setMyConnections((connections || []) as MyConnection[])
 
       } catch (error: any) {
         console.error("Fetch Error:", error.message)
@@ -255,6 +272,14 @@ export default function DiscoverContent({ user }: { user: User }) {
     } finally {
       setSavingId(null)
     }
+  }
+
+  // Check if a target user is connected (accepted) with the current user
+  const getConnection = (targetUserId: string): MyConnection | undefined => {
+    return myConnections.find(c =>
+      (c.user_id === user.id && c.connected_user_id === targetUserId) ||
+      (c.user_id === targetUserId && c.connected_user_id === user.id)
+    )
   }
 
   const getLevelColor = (level: string) => {
@@ -607,6 +632,8 @@ export default function DiscoverContent({ user }: { user: User }) {
           currentUser={user}
           onConnect={handleConnect}
           isConnecting={connectingId === viewingUser.id}
+          isConnected={!!getConnection(viewingUser.id)}
+          connectionId={getConnection(viewingUser.id)?.id || null}
         />
       )}
 
