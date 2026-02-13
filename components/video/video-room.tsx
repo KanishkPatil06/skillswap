@@ -31,6 +31,7 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
     const localVideoRef = useRef<HTMLVideoElement>(null)
     const remoteVideoRef = useRef<HTMLVideoElement>(null)
     const screenVideoRef = useRef<HTMLVideoElement>(null)
+    const remoteStreamRef = useRef<MediaStream | null>(null)
 
     // WebRTC refs (use refs to avoid stale closures)
     const pcRef = useRef<RTCPeerConnection | null>(null)
@@ -100,8 +101,13 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
 
             // Handle incoming remote tracks
             pc.ontrack = (event) => {
-                if (remoteVideoRef.current && event.streams[0]) {
-                    remoteVideoRef.current.srcObject = event.streams[0]
+                if (event.streams[0]) {
+                    remoteStreamRef.current = event.streams[0]
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = event.streams[0]
+                        // Force play in case autoplay is blocked
+                        remoteVideoRef.current.play().catch(() => { })
+                    }
                     setRemoteConnected(true)
                 }
             }
@@ -148,8 +154,14 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
 
                 try {
                     if (payload.type === "join") {
-                        // A new peer joined — if we're already here, create an offer
-                        await createOffer()
+                        // A new peer joined — the "polite" peer (alphabetically smaller ID) creates the offer
+                        // This prevents both sides from creating conflicting offers
+                        if (myIdRef.current < payload.from) {
+                            console.log("📞 I'm the polite peer — creating offer")
+                            await createOffer()
+                        } else {
+                            console.log("📞 Remote is the polite peer — waiting for their offer")
+                        }
                     } else if (payload.type === "offer") {
                         // Received an offer — set remote description and create answer
                         await pcRef.current.setRemoteDescription(
@@ -201,16 +213,30 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
                 }
             })
 
-            // Subscribe and announce join
+            // Subscribe and announce join — re-announce periodically to handle timing
             channel.subscribe((status: string) => {
                 if (status === "SUBSCRIBED") {
                     setConnectionState("waiting")
-                    // Announce we joined — triggers the other peer to send an offer
+                    // Announce join immediately
                     channel.send({
                         type: "broadcast",
                         event: "signal",
                         payload: { type: "join", from: myIdRef.current } as SignalPayload,
                     })
+                    // Re-announce every 2 seconds for 10 seconds (in case the other peer hasn't subscribed yet)
+                    const joinInterval = setInterval(() => {
+                        if (pcRef.current?.connectionState === "connected") {
+                            clearInterval(joinInterval)
+                            return
+                        }
+                        channel.send({
+                            type: "broadcast",
+                            event: "signal",
+                            payload: { type: "join", from: myIdRef.current } as SignalPayload,
+                        })
+                    }, 2000)
+                    // Stop retrying after 10 seconds
+                    setTimeout(() => clearInterval(joinInterval), 10000)
                 }
             })
         }
@@ -362,8 +388,8 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
                 <h1 className="text-xl font-bold">Session Call</h1>
                 <div className="flex items-center gap-2">
                     <span className={`inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full ${remoteConnected
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                         }`}>
                         <span className={`w-2 h-2 rounded-full ${remoteConnected ? "bg-green-500 animate-pulse" : "bg-yellow-500"}`} />
                         {statusLabel()}
@@ -373,18 +399,23 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
 
             {/* Video grid */}
             <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto w-full h-[calc(100vh-100px)] min-h-[500px]">
-                {/* Local video */}
+                {/* Local video — always rendered, hidden via CSS when camera is off */}
                 <div className="relative bg-muted rounded-lg overflow-hidden aspect-video shadow-sm">
-                    {videoEnabled ? (
-                        <video
-                            ref={localVideoRef}
-                            autoPlay
-                            muted
-                            playsInline
-                            className="w-full h-full object-cover scale-x-[-1]"
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+                    <video
+                        ref={(el) => {
+                            (localVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el
+                            if (el && localStreamRef.current) {
+                                el.srcObject = localStreamRef.current
+                                el.play().catch(() => { })
+                            }
+                        }}
+                        autoPlay
+                        muted
+                        playsInline
+                        className={`w-full h-full object-cover scale-x-[-1] ${videoEnabled ? '' : 'invisible'}`}
+                    />
+                    {!videoEnabled && (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                             <VideoOff className="w-12 h-12" />
                         </div>
                     )}
@@ -393,26 +424,28 @@ export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }
                     </div>
                 </div>
 
-                {/* Remote video or waiting */}
+                {/* Remote video — always rendered, overlay shown when waiting */}
                 <div className="relative bg-muted rounded-lg overflow-hidden aspect-video shadow-sm">
-                    {remoteConnected ? (
-                        <video
-                            ref={remoteVideoRef}
-                            autoPlay
-                            playsInline
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <>
-                            <video ref={remoteVideoRef} autoPlay playsInline className="hidden" />
-                            <div className="flex items-center justify-center w-full h-full">
-                                <div className="text-center text-muted-foreground p-6">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
-                                    <p className="text-lg font-medium mb-1">Waiting for participant...</p>
-                                    <p className="text-sm">They&apos;ll appear here when they join</p>
-                                </div>
+                    <video
+                        ref={(el) => {
+                            (remoteVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el
+                            if (el && remoteStreamRef.current) {
+                                el.srcObject = remoteStreamRef.current
+                                el.play().catch(() => { })
+                            }
+                        }}
+                        autoPlay
+                        playsInline
+                        className={`w-full h-full object-cover ${remoteConnected ? '' : 'invisible'}`}
+                    />
+                    {!remoteConnected && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center text-muted-foreground p-6">
+                                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
+                                <p className="text-lg font-medium mb-1">Waiting for participant...</p>
+                                <p className="text-sm">They&apos;ll appear here when they join</p>
                             </div>
-                        </>
+                        </div>
                     )}
                     {remoteConnected && (
                         <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">

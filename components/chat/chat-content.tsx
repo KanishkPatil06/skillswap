@@ -62,8 +62,9 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
   // Voice call state
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
-  const [callRoomUrl, setCallRoomUrl] = useState("")
+  const [callChannelId, setCallChannelId] = useState("")
   const [callId, setCallId] = useState("")
+  const [callRole, setCallRole] = useState<"caller" | "receiver">("caller")
   const [incomingCall, setIncomingCall] = useState<any>(null)
   const [showIncomingCall, setShowIncomingCall] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -549,9 +550,11 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
               connectionId={connectionId}
               receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
               receiverName={connection?.profile?.full_name || "User"}
-              onCallInitiated={(roomUrl, callId) => {
-                setCallRoomUrl(roomUrl)
-                setCallId(callId)
+              callerName={user.user_metadata?.full_name || user.email || "User"}
+              onCallInitiated={(channelId, cId) => {
+                setCallChannelId(channelId)
+                setCallId(cId)
+                setCallRole("caller")
                 setIsCallModalOpen(true)
               }}
               disabled={!connection}
@@ -700,17 +703,22 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       <CallModal
         isOpen={isCallModalOpen}
         onClose={() => setIsCallModalOpen(false)}
-        roomUrl={callRoomUrl}
+        callChannelId={callChannelId}
         callId={callId}
         remoteName={connection?.profile?.full_name || "User"}
+        role={callRole}
+        userId={user.id}
       />
 
       <IncomingCallNotification
         isOpen={showIncomingCall}
         callerName={incomingCall?.callerName || "User"}
+        callChannelId={incomingCall?.callChannelId}
+        callerId={incomingCall?.callerId}
         onAccept={() => {
-          setCallRoomUrl(incomingCall.roomUrl)
+          setCallChannelId(incomingCall.callChannelId)
           setCallId(incomingCall.callId)
+          setCallRole("receiver")
           setShowIncomingCall(false)
           setIsCallModalOpen(true)
         }}

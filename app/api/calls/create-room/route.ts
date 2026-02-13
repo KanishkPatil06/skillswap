@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { randomUUID } from 'crypto'
 
 export async function POST(request: Request) {
     try {
@@ -13,9 +14,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // For now, we'll use a simple room naming instead of Daily.co API
-        // This allows testing without Daily.co API key first
-        const roomUrl = `https://meet.daily.co/${connectionId}-${Date.now()}`
+        // Generate a unique channel ID for WebRTC signaling
+        const callChannelId = `${connectionId}-${randomUUID().slice(0, 8)}`
 
         // Create call history record
         const { data: callRecord, error: dbError } = await supabase
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
                 receiver_id: receiverId,
                 call_type: 'voice',
                 status: 'ringing',
-                room_url: roomUrl,
+                room_url: callChannelId, // Store channel ID for reference
                 started_at: new Date().toISOString(),
             })
             .select()
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             success: true,
-            roomUrl,
+            callChannelId,
             callId: callRecord.id,
         })
     } catch (error) {

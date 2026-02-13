@@ -116,7 +116,7 @@ export default function DashboardContent({ user }: { user: User }) {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+          <Card className="lg:col-span-2 glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10">
             <CardHeader>
               <CardTitle className="text-2xl">Quick Actions</CardTitle>
               <CardDescription>Get started with SkillSwap</CardDescription>
@@ -124,7 +124,7 @@ export default function DashboardContent({ user }: { user: User }) {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Link href="/discover">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <Users className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Discover People</p>
@@ -133,7 +133,7 @@ export default function DashboardContent({ user }: { user: User }) {
                   </Button>
                 </Link>
                 <Link href="/help-requests">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <HelpCircle className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Help Requests</p>
@@ -142,7 +142,7 @@ export default function DashboardContent({ user }: { user: User }) {
                   </Button>
                 </Link>
                 <Link href="/connections">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <MessageSquare className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Connections</p>
@@ -151,7 +151,7 @@ export default function DashboardContent({ user }: { user: User }) {
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <Button variant="outline" className="w-full justify-start gap-3 h-auto py-4 bg-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                     <UserIcon className="w-5 h-5" />
                     <div className="text-left">
                       <p className="font-semibold text-sm">Edit Profile</p>
@@ -184,7 +184,7 @@ export default function DashboardContent({ user }: { user: User }) {
                 <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
               )}
               <Link href="/profile">
-                <Button variant="outline" size="sm" className="w-full mt-2 gap-2 bg-transparent">
+                <Button variant="secondary" size="sm" className="w-full mt-2 gap-2">
                   View Profile
                   <ArrowRight className="w-4 h-4" />
                 </Button>

@@ -429,7 +429,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                           Connect
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant="default"
                           size="sm"
                           onClick={() => setViewingUser(profile)}
                         >

@@ -36,16 +36,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ url: session.meeting_link })
         }
 
-        // 4. Create new room in Daily.co
+        // 4. Create room — if no DAILY_API_KEY, use Supabase Realtime (peer-to-peer via video-room.tsx)
         if (!DAILY_API_KEY) {
-            console.warn("DAILY_API_KEY not set. Returning mock URL for development.")
-            // Update DB with mock URL so we don't keep "creating" it
-            const mockUrl = `https://demo.daily.co/skillswap-${sessionId}`
+            // VideoRoom component uses Supabase Realtime with sessionId for signaling,
+            // so we just need a non-null meeting_link to indicate a room exists
+            const roomUrl = `webrtc-room-${sessionId}`
             await supabase
                 .from("sessions")
-                .update({ meeting_link: mockUrl })
+                .update({ meeting_link: roomUrl })
                 .eq("id", sessionId)
-            return NextResponse.json({ url: mockUrl })
+            return NextResponse.json({ url: roomUrl })
         }
 
         const response = await fetch("https://api.daily.co/v1/rooms", {

@@ -12,7 +12,6 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -44,6 +43,7 @@ export function BookSessionDialog({
     const [open, setOpen] = useState(false)
     const [date, setDate] = useState<Date>()
     const [timeSlot, setTimeSlot] = useState<string | null>(null)
+    const [duration, setDuration] = useState(60)
     const [notes, setNotes] = useState("")
     const [loading, setLoading] = useState(false)
     const [availability, setAvailability] = useState<any[]>([])
@@ -134,7 +134,7 @@ export function BookSessionDialog({
                     mentor_id: mentorId,
                     skill_id: skillId,
                     scheduled_at: scheduledAt.toISOString(),
-                    duration_minutes: 60, // Default to 1 hour
+                    duration_minutes: duration,
                     notes
                 })
             })
@@ -161,26 +161,56 @@ export function BookSessionDialog({
             <DialogTrigger asChild>
                 {children || <Button>Book Session</Button>}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Book a Session</DialogTitle>
-                    <DialogDescription>
-                        Schedule a 1-hour session with {mentorName} for {skillName}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
+            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
+                {/* Gradient Accent Strip */}
+                <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, hsl(250,95%,63%), hsl(168,76%,42%), hsl(280,95%,68%))' }} />
+                <div className="px-6 pt-5">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg">
+                            <CalendarIcon className="w-5 h-5 text-primary" />
+                            Book a Session
+                        </DialogTitle>
+                        <DialogDescription>
+                            Schedule a session with <span className="font-medium text-[hsl(var(--foreground))]">{mentorName}</span> for <span className="font-medium text-primary">{skillName}</span>.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+                <div className="grid gap-5 px-6 py-4">
+                    {/* Duration Selector */}
                     <div className="grid gap-2">
-                        <Label>Select Date</Label>
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Duration</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[30, 60, 90].map((d) => (
+                                <Button
+                                    key={d}
+                                    variant={duration === d ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setDuration(d)}
+                                    className={cn(
+                                        "w-full transition-all",
+                                        duration === d && "shadow-md"
+                                    )}
+                                >
+                                    <Clock className="mr-1.5 h-3.5 w-3.5" />
+                                    {d} min
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Date Picker */}
+                    <div className="grid gap-2">
+                        <Label className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Select Date</Label>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "w-full justify-start text-left font-normal",
+                                        "w-full justify-start text-left font-normal h-11",
                                         !date && "text-muted-foreground"
                                     )}
                                 >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                                 </Button>
                             </PopoverTrigger>
@@ -202,13 +232,14 @@ export function BookSessionDialog({
                         </Popover>
                     </div>
 
+                    {/* Time Slots */}
                     {date && (
                         <div className="grid gap-2">
-                            <Label>Select Time</Label>
-                            <ScrollArea className="h-40 rounded-md border p-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Select Time</Label>
+                            <ScrollArea className="h-40 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3">
                                 {fetchingAvailability ? (
                                     <div className="flex items-center justify-center h-full">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                     </div>
                                 ) : (
                                     slots.length > 0 ? (
@@ -219,16 +250,20 @@ export function BookSessionDialog({
                                                     variant={timeSlot === slot ? "default" : "outline"}
                                                     size="sm"
                                                     onClick={() => setTimeSlot(slot)}
-                                                    className="w-full"
+                                                    className={cn(
+                                                        "w-full text-xs transition-all",
+                                                        timeSlot === slot && "shadow-md ring-2 ring-primary/20"
+                                                    )}
                                                 >
-                                                    <Clock className="mr-2 h-3 w-3" />
+                                                    <Clock className="mr-1 h-3 w-3" />
                                                     {slot}
                                                 </Button>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                                            No matching slots
+                                        <div className="flex flex-col items-center justify-center h-full text-[hsl(var(--muted-foreground))] text-sm gap-1">
+                                            <Clock className="w-5 h-5 opacity-40" />
+                                            No available slots for this date
                                         </div>
                                     )
                                 )}
@@ -236,22 +271,24 @@ export function BookSessionDialog({
                         </div>
                     )}
 
+                    {/* Notes */}
                     <div className="grid gap-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="notes" className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Notes</Label>
                         <Textarea
                             id="notes"
                             placeholder="What do you want to focus on?"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
+                            className="min-h-[80px] bg-[hsl(var(--card))] border-[hsl(var(--border))]"
                         />
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button onClick={handleBook} disabled={!date || !timeSlot || loading}>
+                <div className="px-6 pb-6">
+                    <Button onClick={handleBook} disabled={!date || !timeSlot || loading} className="w-full h-11 text-sm font-semibold shadow-lg" size="lg">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Confirm Booking
+                        Confirm Booking — {duration} min session
                     </Button>
-                </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     )

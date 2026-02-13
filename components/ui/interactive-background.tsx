@@ -72,18 +72,26 @@ export function InteractiveBackground() {
 
             {/* Floating particles */}
             <div className="absolute inset-0">
-                {[...Array(20)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute w-1 h-1 bg-primary/30 rounded-full animate-float"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 10}s`,
-                            animationDuration: `${15 + Math.random() * 10}s`,
-                        }}
-                    />
-                ))}
+                {[...Array(20)].map((_, i) => {
+                    // Deterministic pseudo-random to avoid hydration mismatch
+                    const seed = (n: number) => ((n * 9301 + 49297) % 233280) / 233280
+                    const left = seed(i * 4 + 1) * 100
+                    const top = seed(i * 4 + 2) * 100
+                    const delay = seed(i * 4 + 3) * 10
+                    const duration = 15 + seed(i * 4 + 4) * 10
+                    return (
+                        <div
+                            key={i}
+                            className="absolute w-1 h-1 bg-primary/30 rounded-full animate-float"
+                            style={{
+                                left: `${left}%`,
+                                top: `${top}%`,
+                                animationDelay: `${delay}s`,
+                                animationDuration: `${duration}s`,
+                            }}
+                        />
+                    )
+                })}
             </div>
         </div>
     )
