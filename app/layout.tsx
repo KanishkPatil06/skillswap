@@ -9,6 +9,8 @@ import { AIChatbot } from "@/components/chatbot/ai-chatbot"
 import { createClient } from "@/lib/supabase/client"
 import { useOnlineStatus } from "@/hooks/use-online-status"
 import "./globals.css"
+import { ParticlesBackground } from "@/components/ui/particles-background"
+import { MouseGlow } from "@/components/ui/mouse-glow"
 
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-sans" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
@@ -39,6 +41,8 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <ParticlesBackground />
+      <MouseGlow />
       {children}
       {isAuthenticated && <AIChatbot />}
     </>

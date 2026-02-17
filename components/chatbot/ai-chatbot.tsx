@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ChatbotMessage } from "./chatbot-message"
 import { Bot, X, Send, Minimize2, Sparkles, Loader2, AlertCircle } from "lucide-react"
+import { OrbAssistant } from "@/components/ui/orb-assistant"
 
 interface Message {
     id: string
@@ -112,13 +113,10 @@ export function AIChatbot() {
 
     if (!isOpen) {
         return (
-            <Button
+            <OrbAssistant
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 h-16 px-5 rounded-full shadow-2xl gradient-primary hover:scale-105 transition-all duration-300 z-50 group gap-3"
-            >
-                <Bot className="h-8 w-8 text-white group-hover:scale-110 transition-transform" />
-                <span className="text-white font-semibold text-base">AI Chat</span>
-            </Button>
+                isOpen={isOpen}
+            />
         )
     }
 

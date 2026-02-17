@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
+import { awardPoints } from "@/lib/gamification"
 
 // POST /api/reviews - Create a new review
 export async function POST(req: NextRequest) {
@@ -81,6 +82,14 @@ export async function POST(req: NextRequest) {
                 { error: "Failed to create review" },
                 { status: 500 }
             )
+        }
+
+        // Award points to reviewer (writer)
+        await awardPoints(user.id, 10, 'Wrote a review')
+
+        // Award points to reviewee (receiver) if 5 stars
+        if (rating === 5) {
+            await awardPoints(reviewee_id, 20, 'Received a 5-star review')
         }
 
         return NextResponse.json(review)

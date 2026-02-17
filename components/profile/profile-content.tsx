@@ -29,6 +29,7 @@ import { ReputationBadge } from "@/components/profile/ReputationBadge"
 import { ReviewList } from "@/components/reviews/ReviewList"
 import { AvatarUpload } from "@/components/profile/avatar-upload"
 import { PortfolioSection } from "@/components/profile/portfolio-section"
+import { BadgeList } from "@/components/gamification/badge-list"
 
 interface Profile {
     id: string
@@ -298,6 +299,13 @@ export default function ProfileContent({ user }: { user: User }) {
                                         </div>
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Badges Section */}
+                        <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <CardContent className="p-6">
+                                <BadgeList userId={user.id} />
                             </CardContent>
                         </Card>
                     </div>

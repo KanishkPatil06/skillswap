@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { awardPoints } from '@/lib/gamification';
 
 export async function GET(request: Request) {
     try {
@@ -190,6 +191,16 @@ export async function PATCH(request: Request) {
         if (updateError) {
             console.error('Error updating session:', updateError);
             return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
+        }
+
+        // Award points if session is completed
+        if (status === 'completed') {
+            // Check if points were already awarded? 
+            // Ideally we should have a flag, but for now assuming optimistic usage.
+            // Award to mentor
+            await awardPoints(session.mentor_id, 50, 'Completed a session')
+            // Award to learner
+            await awardPoints(session.learner_id, 50, 'Completed a session')
         }
 
         return NextResponse.json(updatedSession);

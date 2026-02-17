@@ -1,0 +1,41 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   app/api/notifications/trigger/route.ts
+	modified:   app/api/reviews/route.ts
+	modified:   app/api/sessions/route.ts
+	modified:   app/layout.tsx
+	modified:   app/page.tsx
+	modified:   components/auth/login-button.tsx
+	modified:   components/chatbot/ai-chatbot.tsx
+	modified:   components/connections/connections-content.tsx
+	modified:   components/dashboard/dashboard-content.tsx
+	modified:   components/discover/ProfileViewModal.tsx
+	modified:   components/profile/profile-content.tsx
+	modified:   next.config.mjs
+	modified:   package-lock.json
+	modified:   package.json
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	app/api/gamification/
+	app/leaderboard/
+	app/signin/
+	components/auth/auth-modal.tsx
+	components/dashboard/stat-card.tsx
+	components/gamification/
+	components/landing/
+	components/ui/animated-avatar.tsx
+	components/ui/glowing-card.tsx
+	components/ui/mouse-glow.tsx
+	components/ui/orb-assistant.tsx
+	components/ui/particles-background.tsx
+	git_status.txt
+	lib/gamification.ts
+	public/media/
+	scripts/gamification.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")

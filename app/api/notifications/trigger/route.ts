@@ -85,6 +85,12 @@ export async function POST(req: NextRequest) {
                 link = "/profile"
                 break
 
+            case "badge_earned":
+                title = "New Badge Unlocked!"
+                body_message = message || "You earned a new badge!"
+                link = "/profile"
+                break
+
             default:
                 title = "Notification"
                 body_message = message || `${senderName} performed an action.`

@@ -37,6 +37,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
   const [sentConnections, setSentConnections] = useState<Connection[]>([])
   const [receivedConnections, setReceivedConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
@@ -45,7 +46,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
   useEffect(() => {
     fetchConnections()
 
-    // Subscribe to new messages to update the list immediately
+    // Subscribe to new messages
     const channel = supabase
       .channel("connections_list_updates")
       .on(
@@ -63,29 +64,38 @@ export default function ConnectionsContent({ user }: { user: User }) {
   }, [user.id])
 
   const fetchConnections = async () => {
-    // Get connections where current user is the sender
+    setLoading(true)
+    // 1. Get connections
     const { data: sent } = await supabase
       .from("connections")
       .select("*, profile:profiles!connected_user_id(full_name, bio, avatar_url)")
       .eq("user_id", user.id)
 
-    // Get connections where current user is the receiver
     const { data: received } = await supabase
       .from("connections")
       .select("*, profile:profiles!user_id(full_name, bio, avatar_url)")
       .eq("connected_user_id", user.id)
 
+    // 2. Get pinned chats
+    const { data: pinned } = await supabase
+      .from("pinned_chats")
+      .select("connection_id")
+      .eq("user_id", user.id)
+
+    if (pinned) {
+      setPinnedIds(new Set(pinned.map(p => p.connection_id)))
+    }
+
     let sentData = (sent || []) as Connection[]
     let receivedData = (received || []) as Connection[]
 
-    // Fetch last messages and unread counts for accepted connections
+    // Fetch last messages...
     const acceptedIds = [
       ...sentData.filter(c => c.status === 'accepted').map(c => c.id),
       ...receivedData.filter(c => c.status === 'accepted').map(c => c.id)
     ]
 
     if (acceptedIds.length > 0) {
-      // We'll fetch messages for all these connections
       const { data: messages } = await supabase
         .from("chat_messages")
         .select("id, connection_id, content, created_at, sender_id, read_at")
@@ -93,14 +103,11 @@ export default function ConnectionsContent({ user }: { user: User }) {
         .order("created_at", { ascending: false })
 
       if (messages) {
-        // Helper to process connections with message data
         const processConnection = (conn: Connection) => {
           const connMessages = messages.filter(m => m.connection_id === conn.id)
           if (connMessages.length > 0) {
             conn.last_message = connMessages[0].content
             conn.last_message_time = connMessages[0].created_at
-
-            // Count unread messages sent by the OTHER user
             conn.unread_count = connMessages.filter(
               m => m.sender_id !== user.id && !m.read_at
             ).length
@@ -118,12 +125,19 @@ export default function ConnectionsContent({ user }: { user: User }) {
     setLoading(false)
   }
 
-  // Combine accepted connections from both sent and received
+  // Combine and Sort
   const acceptedConnections = [
     ...sentConnections.filter((c) => c.status === "accepted"),
     ...receivedConnections.filter((c) => c.status === "accepted"),
   ].sort((a, b) => {
-    // Sort by last message time if available, otherwise connection creation time
+    // 1. Pinned status
+    const isPinnedA = pinnedIds.has(a.id)
+    const isPinnedB = pinnedIds.has(b.id)
+
+    if (isPinnedA && !isPinnedB) return -1
+    if (!isPinnedA && isPinnedB) return 1
+
+    // 2. Time
     const timeA = a.last_message_time || a.created_at
     const timeB = b.last_message_time || b.created_at
     return new Date(timeB).getTime() - new Date(timeA).getTime()
@@ -285,8 +299,13 @@ export default function ConnectionsContent({ user }: { user: User }) {
 
                       <div className="flex-1 min-w-0 grid grid-cols-1 gap-1">
                         <div className="flex items-center gap-2 justify-between">
-                          <h3 className="font-semibold text-foreground truncate">
+                          <h3 className="font-semibold text-foreground truncate flex items-center gap-2">
                             {connection.profile?.full_name || "User"}
+                            {pinnedIds.has(connection.id) && (
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border flex items-center gap-1 text-muted-foreground">
+                                📌 Pinned
+                              </span>
+                            )}
                           </h3>
                         </div>
 
@@ -504,22 +523,38 @@ export default function ConnectionsContent({ user }: { user: User }) {
   )
 }
 
+import { DotLottiePlayer } from '@dotlottie/react-player';
+
 function EmptyState({
   icon: Icon,
   title,
   description,
-  action
+  action,
+  lottieSrc
 }: {
-  icon: any
+  icon?: any
   title: string
   description: string
   action?: React.ReactNode
+  lottieSrc?: string
 }) {
   return (
-    <div className="text-center py-12 px-4">
-      <Icon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px]">
+      {lottieSrc ? (
+        <div className="w-48 h-48 mb-6">
+          <DotLottiePlayer
+            src={lottieSrc}
+            autoplay
+            loop
+          />
+        </div>
+      ) : (
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+          {Icon && <Icon className="w-8 h-8 text-muted-foreground" />}
+        </div>
+      )}
       <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>
-      <p className="text-muted-foreground mb-4">{description}</p>
+      <p className="text-muted-foreground mb-6 max-w-sm mx-auto">{description}</p>
       {action}
     </div>
   )

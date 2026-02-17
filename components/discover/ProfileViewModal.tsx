@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { MapPin, ExternalLink, UserPlus, CheckCircle, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe, Briefcase } from "lucide-react"
 import { ReviewList } from "../reviews/ReviewList"
+import { BadgeList } from "@/components/gamification/badge-list"
 import { EndorsementButton } from "../reviews/EndorsementButton"
 import { RatingStars } from "../reviews/RatingStars"
 import { ReputationBadge } from "../profile/ReputationBadge"
@@ -212,6 +213,10 @@ export function ProfileViewModal({
                                     <Star className="w-3.5 h-3.5" />
                                     Reviews
                                 </TabsTrigger>
+                                <TabsTrigger value="badges" className="gap-1.5">
+                                    <Award className="w-3.5 h-3.5" />
+                                    Badges
+                                </TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="skills" className="space-y-3 mt-4">
@@ -273,6 +278,12 @@ export function ProfileViewModal({
 
                             <TabsContent value="reviews" className="mt-4">
                                 <ReviewList userId={user.id} />
+                            </TabsContent>
+
+                            <TabsContent value="badges" className="mt-4">
+                                <div className="p-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+                                    <BadgeList userId={user.id} />
+                                </div>
                             </TabsContent>
                         </Tabs>
                     </div>
