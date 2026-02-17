@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Menu, X, LogOut } from "lucide-react"
 import { ThemeSwitch } from "@/components/ui/theme-switch"
-
+import { NotificationBell } from "@/components/notifications/notification-bell"
+import { InstallPWA } from "@/components/pwa/install-button"
 import { useOnlineStatus } from "@/hooks/use-online-status"
 
 export function MainNav({ user }: { user: User }) {
@@ -19,7 +20,7 @@ export function MainNav({ user }: { user: User }) {
   const pathname = usePathname()
   const supabase = createClient()
 
-  useOnlineStatus(user)
+  useOnlineStatus(user.id)
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -122,16 +123,18 @@ export function MainNav({ user }: { user: User }) {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <NotificationBell userId={user.id} />
             <Link
               href="/profile"
               className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors"
             >
               <div className="relative w-6 h-6 rounded-full bg-muted flex items-center justify-center text-foreground text-xs font-medium border border-border/20" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.1)' }}>
                 {user.email?.charAt(0).toUpperCase()}
-                <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-background"></span>
+                <span className="absolute bottom-0 right-0 w-2 h-2 bg-purple-500 rounded-full border-2 border-background"></span>
               </div>
               {user.email}
             </Link>
+            <InstallPWA />
             <ThemeSwitch />
             <Button
               variant="outline"
@@ -169,8 +172,12 @@ export function MainNav({ user }: { user: User }) {
                 </Link>
               )
             })}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <NotificationBell userId={user.id} />
               <ThemeSwitch />
+              <div className="md:hidden">
+                <InstallPWA />
+              </div>
               <Button
                 variant="outline"
                 size="sm"

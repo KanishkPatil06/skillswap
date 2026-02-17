@@ -201,8 +201,11 @@ export function useWebRTC({
                         startDurationTimer()
                         break
                     case "disconnected":
+                        console.warn("⚠️ ICE connection disconnected (may be temporary)")
+                        // Do NOT end call immediately, wait for failed or recovery
+                        break
                     case "failed":
-                        console.warn("⚠️ ICE connection lost")
+                        console.error("❌ ICE connection failed")
                         endCall()
                         break
                 }

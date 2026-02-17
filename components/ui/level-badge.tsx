@@ -14,17 +14,17 @@ export function LevelBadge({ level, levelName, size = "md", showLevel = true }: 
             case 1:
                 return "bg-gray-500 hover:bg-gray-600 border-gray-600"
             case 2:
-                return "bg-blue-500 hover:bg-blue-600 border-blue-600"
+                return "bg-violet-500 hover:bg-violet-600 border-violet-600"
             case 3:
-                return "bg-green-500 hover:bg-green-600 border-green-600"
+                return "bg-fuchsia-500 hover:bg-fuchsia-600 border-fuchsia-600"
             case 4:
                 return "bg-purple-500 hover:bg-purple-600 border-purple-600"
             case 5:
-                return "bg-orange-500 hover:bg-orange-600 border-orange-600"
+                return "bg-pink-500 hover:bg-pink-600 border-pink-600"
             case 6:
-                return "bg-red-500 hover:bg-red-600 border-red-600"
+                return "bg-rose-500 hover:bg-rose-600 border-rose-600"
             case 7:
-                return "bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 border-yellow-600 shadow-lg shadow-yellow-500/50"
+                return "bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 border-amber-600 shadow-lg shadow-amber-500/50"
             default:
                 return "bg-gray-500 hover:bg-gray-600 border-gray-600"
         }

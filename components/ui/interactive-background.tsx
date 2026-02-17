@@ -30,28 +30,28 @@ export function InteractiveBackground() {
             {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/10 to-accent/10" />
 
-            {/* Animated mesh gradient - Primary Purple - MUCH MORE VISIBLE */}
-            <div className="absolute inset-0 opacity-60">
+            {/* Animated mesh gradient - Deep Purple */}
+            <div className="absolute inset-0 opacity-50">
                 <div
-                    className="absolute w-[700px] h-[700px] rounded-full blur-2xl transition-all duration-1000 ease-out"
+                    className="absolute w-[700px] h-[700px] rounded-full blur-3xl transition-all duration-1000 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.3) 50%, transparent 70%)",
+                        background: "radial-gradient(circle, rgba(126, 34, 206, 0.7) 0%, rgba(88, 28, 135, 0.3) 50%, transparent 70%)",
                         left: `${mousePosition.x - 350}px`,
                         top: `${mousePosition.y - 350}px`,
-                        opacity: isHovering ? 1 : 0.7,
+                        opacity: isHovering ? 1 : 0.6,
                     }}
                 />
             </div>
 
-            {/* Tertiary gradient blob - Pink - MUCH MORE VISIBLE - PREFER INCOMING */}
-            <div className="absolute inset-0 opacity-45">
+            {/* Secondary gradient blob - Violet/Pink */}
+            <div className="absolute inset-0 opacity-35">
                 <div
-                    className="absolute w-[800px] h-[800px] rounded-full blur-2xl transition-all duration-500 ease-out"
+                    className="absolute w-[800px] h-[800px] rounded-full blur-3xl transition-all duration-500 ease-out"
                     style={{
-                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, rgba(236, 72, 153, 0.3) 30%, transparent 80%)",
+                        background: "radial-gradient(circle, rgba(168, 85, 247, 0.6) 0%, rgba(192, 38, 211, 0.25) 30%, transparent 80%)",
                         left: `${mousePosition.x + 200}px`,
                         top: `${mousePosition.y + 2000}px`,
-                        opacity: isHovering ? 1 : 0.6,
+                        opacity: isHovering ? 1 : 0.5,
                     }}
                 />
             </div>
@@ -82,7 +82,7 @@ export function InteractiveBackground() {
                     return (
                         <div
                             key={i}
-                            className="absolute w-1 h-1 bg-primary/30 rounded-full animate-float"
+                            className="absolute w-1 h-1 bg-purple-500/30 rounded-full animate-float"
                             style={{
                                 left: `${left}%`,
                                 top: `${top}%`,

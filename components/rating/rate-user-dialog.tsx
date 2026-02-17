@@ -47,20 +47,21 @@ export function RateUserDialog({ userId, userName, trigger }: RateUserDialogProp
         setLoading(true)
 
         try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error("Not authenticated")
-
-            // Insert rating
-            const { error } = await supabase
-                .from('user_ratings')
-                .insert({
-                    rated_user_id: userId,
-                    rater_id: user.id,
+            // Use the reviews API which inserts into the correct `reviews` table
+            const res = await fetch("/api/reviews", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    reviewee_id: userId,
                     rating: rating,
-                    feedback: feedback || null
-                })
+                    comment: feedback || null,
+                }),
+            })
 
-            if (error) throw error
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || "Failed to submit rating")
+            }
 
             toast({
                 title: "Rating Submitted!",

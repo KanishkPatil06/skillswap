@@ -6,12 +6,14 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { MainNav } from "@/components/navigation/main-nav"
-import { BarChart3, Users, MessageSquare, HelpCircle, User as UserIcon, ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { BarChart3, Users, MessageSquare, HelpCircle, User as UserIcon, ArrowRight, Sparkles, BookOpen, Clock, Star } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardContent({ user }: { user: User }) {
+  const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
-  const [stats, setStats] = useState({ skills: 0, connections: 0, requests: 0 })
+  const [stats, setStats] = useState({ skills: 0, connections: 0, requests: 0, sessions_completed: 0, reputation_score: 0 })
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -38,6 +40,8 @@ export default function DashboardContent({ user }: { user: User }) {
         skills: userSkills?.length || 0,
         connections: connections?.length || 0,
         requests: requests?.length || 0,
+        sessions_completed: 0,
+        reputation_score: profileData?.rating_score || 0,
       })
       setLoading(false)
     }
@@ -59,138 +63,142 @@ export default function DashboardContent({ user }: { user: User }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background animate-fade-in-up">
       <MainNav user={user} />
-
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Welcome back!</h1>
-          <p className="text-muted-foreground">{profile?.full_name || "Update your profile to get started"}</p>
-        </div>
+        <div className="flex flex-col gap-8">
+          {/* Welcome Section */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back, {user.user_metadata?.full_name || 'User'}! 👋</h1>
+              <p className="text-muted-foreground mt-1">Here's what's happening with your skills today.</p>
+            </div>
+            <Button onClick={() => router.push('/discover')} className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+              <Sparkles className="w-4 h-4" />
+              Discover Mentors
+            </Button>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg overflow-hidden group relative">
-            <div className="absolute inset-0 gradient-primary opacity-10 group-hover:opacity-20 transition-opacity" />
-            <CardContent className="pt-6 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium mb-2">Skills Added</p>
-                  <p className="text-4xl font-bold gradient-text">{stats.skills}</p>
-                </div>
-                <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300 glow-primary">
-                  <BarChart3 className="w-8 h-8 text-white" />
-                </div>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-stagger-in" style={{ "--stagger": "100ms" } as React.CSSProperties}>
+            <Card className="p-6 flex items-center space-x-4 border-l-4 border-l-primary card-hover">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <BookOpen className="w-6 h-6 text-primary" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg overflow-hidden group relative">
-            <div className="absolute inset-0 gradient-secondary opacity-10 group-hover:opacity-20 transition-opacity" />
-            <CardContent className="pt-6 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium mb-2">Connections</p>
-                  <p className="text-4xl font-bold text-accent">{stats.connections}</p>
-                </div>
-                <div className="w-16 h-16 rounded-2xl gradient-secondary flex items-center justify-center group-hover:scale-110 transition-all duration-300 glow-accent">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Sessions</p>
+                <h3 className="text-2xl font-bold">{stats.sessions_completed || 0}</h3>
               </div>
-            </CardContent>
-          </Card>
+            </Card>
 
-          <Card className="glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg overflow-hidden group relative">
-            <div className="absolute inset-0 gradient-tertiary opacity-10 group-hover:opacity-20 transition-opacity" />
-            <CardContent className="pt-6 relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-muted-foreground text-sm font-medium mb-2">Open Requests</p>
-                  <p className="text-4xl font-bold gradient-text">{stats.requests}</p>
-                </div>
-                <div className="w-16 h-16 rounded-2xl gradient-tertiary flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                  <HelpCircle className="w-8 h-8 text-white" />
-                </div>
+            <Card className="p-6 flex items-center space-x-4 border-l-4 border-l-accent card-hover">
+              <div className="p-3 bg-accent/10 rounded-full">
+                <Clock className="w-6 h-6 text-accent" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Learning Hours</p>
+                <h3 className="text-2xl font-bold">12.5</h3>
+              </div>
+            </Card>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10">
-            <CardHeader>
-              <CardTitle className="text-2xl">Quick Actions</CardTitle>
-              <CardDescription>Get started with SkillSwap</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Link href="/discover">
-                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                    <Users className="w-5 h-5" />
-                    <div className="text-left">
-                      <p className="font-semibold text-sm">Discover People</p>
-                      <p className="text-xs text-muted-foreground">Find skilled individuals</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/help-requests">
-                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                    <HelpCircle className="w-5 h-5" />
-                    <div className="text-left">
-                      <p className="font-semibold text-sm">Help Requests</p>
-                      <p className="text-xs text-muted-foreground">Ask for help</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/connections">
-                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                    <MessageSquare className="w-5 h-5" />
-                    <div className="text-left">
-                      <p className="font-semibold text-sm">Connections</p>
-                      <p className="text-xs text-muted-foreground">Chat with contacts</p>
-                    </div>
-                  </Button>
-                </Link>
+            <Card className="p-6 flex items-center space-x-4 border-l-4 border-l-purple-500 card-hover">
+              <div className="p-3 bg-purple-500/10 rounded-full">
+                <Star className="w-6 h-6 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Reputation</p>
+                <h3 className="text-2xl font-bold">{stats.reputation_score || 0}</h3>
+              </div>
+            </Card>
+
+            <Card className="p-6 flex items-center space-x-4 border-l-4 border-l-pink-500 card-hover">
+              <div className="p-3 bg-pink-500/10 rounded-full">
+                <Users className="w-6 h-6 text-pink-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Connections</p>
+                <h3 className="text-2xl font-bold">24</h3>
+              </div>
+            </Card>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2 glass border border-purple-500/20 bg-gradient-to-br from-violet-600/20 via-purple-500/10 to-transparent shadow-xl shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/20">
+              <CardHeader>
+                <CardTitle className="text-2xl">Quick Actions</CardTitle>
+                <CardDescription>Get started with SkillSwap</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/discover">
+                    <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                      <Users className="w-5 h-5" />
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">Discover People</p>
+                        <p className="text-xs text-muted-foreground">Find skilled individuals</p>
+                      </div>
+                    </Button>
+                  </Link>
+                  <Link href="/help-requests">
+                    <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                      <HelpCircle className="w-5 h-5" />
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">Help Requests</p>
+                        <p className="text-xs text-muted-foreground">Ask for help</p>
+                      </div>
+                    </Button>
+                  </Link>
+                  <Link href="/connections">
+                    <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                      <MessageSquare className="w-5 h-5" />
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">Connections</p>
+                        <p className="text-xs text-muted-foreground">Chat with contacts</p>
+                      </div>
+                    </Button>
+                  </Link>
+                  <Link href="/profile">
+                    <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                      <UserIcon className="w-5 h-5" />
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">Edit Profile</p>
+                        <p className="text-xs text-muted-foreground">Update your info & skills</p>
+                      </div>
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass border border-pink-500/20 bg-gradient-to-br from-fuchsia-600/20 via-pink-500/10 to-transparent shadow-xl shadow-pink-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <UserIcon className="w-5 h-5" />
+                  Your Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-foreground text-xl font-bold border-2 border-border/30" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 5px 9px rgba(0,0,0,0.1)' }}>
+                    {getInitials(profile?.full_name)}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{profile?.full_name || "Not set"}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                {profile?.bio && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+                )}
                 <Link href="/profile">
-                  <Button variant="secondary" className="w-full justify-start gap-3 h-auto py-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                    <UserIcon className="w-5 h-5" />
-                    <div className="text-left">
-                      <p className="font-semibold text-sm">Edit Profile</p>
-                      <p className="text-xs text-muted-foreground">Update your info & skills</p>
-                    </div>
+                  <Button variant="secondary" size="sm" className="w-full mt-2 gap-2">
+                    View Profile
+                    <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <UserIcon className="w-5 h-5" />
-                Your Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-foreground text-xl font-bold border-2 border-border/30" style={{ boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.1), 0 5px 9px rgba(0,0,0,0.1)' }}>
-                  {getInitials(profile?.full_name)}
-                </div>
-                <div>
-                  <p className="font-semibold">{profile?.full_name || "Not set"}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-              {profile?.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
-              )}
-              <Link href="/profile">
-                <Button variant="secondary" size="sm" className="w-full mt-2 gap-2">
-                  View Profile
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>

@@ -284,10 +284,10 @@ export default function DiscoverContent({ user }: { user: User }) {
 
   const getLevelColor = (level: string) => {
     const colors: Record<string, string> = {
-      Beginner: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-      Intermediate: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+      Beginner: "bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+      Intermediate: "bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400",
       Advanced: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
-      Expert: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+      Expert: "bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400",
     }
     return colors[level] || "bg-gray-50 text-gray-600"
   }
@@ -355,22 +355,23 @@ export default function DiscoverContent({ user }: { user: User }) {
           <TabsContent value="discover" className="mt-0">
             {/* User Grid */}
             {filteredUsers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-stagger-in">
                 {filteredUsers.map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative"
+                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
                   >
+
                     {/* Save Button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`absolute top-2 right-2 z-10 transition-opacity hover:bg-background/80 ${profile.isSaved ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                      className={`absolute top-2 right-2 z-10 transition-all duration-300 hover:bg-background/80 hover:scale-110 ${profile.isSaved ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                       onClick={() => handleToggleSave(profile)}
                       disabled={savingId === profile.id}
                     >
                       <Heart
-                        className={`w-5 h-5 ${(profile as any).isSaved ? "fill-red-500 text-red-500" : "text-muted-foreground"}`}
+                        className={`w-5 h-5 transition-colors ${profile.isSaved ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"}`}
                       />
                     </Button>
 
@@ -443,6 +444,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                         <Button
                           onClick={() => handleConnect(profile.id)}
                           size="sm"
+                          variant="default"
                           disabled={connectingId === profile.id}
                           className="flex-1 gap-2"
                         >
@@ -454,7 +456,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                           Connect
                         </Button>
                         <Button
-                          variant="default"
+                          variant="outline"
                           size="sm"
                           onClick={() => setViewingUser(profile)}
                         >
@@ -499,11 +501,11 @@ export default function DiscoverContent({ user }: { user: User }) {
           <TabsContent value="saved" className="mt-0">
             {/* Saved Users Grid - Reusing same structure but filtered */}
             {filteredUsers.filter(u => u.isSaved).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-stagger-in">
                 {filteredUsers.filter(u => u.isSaved).map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative"
+                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
                   >
                     {/* Save Button */}
                     <Button

@@ -89,12 +89,12 @@ export function AIChatbot() {
             }
 
             setMessages(prev => [...prev, aiMessage])
-        } catch (error) {
+        } catch (error: any) {
             console.error("Chat error:", error)
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: "assistant",
-                content: "⚠️ Sorry, I'm having trouble connecting. Please check your internet connection and try again!",
+                content: error.message || "⚠️ Sorry, I'm having trouble connecting. Please check your internet connection and try again!",
                 timestamp: new Date(),
                 isError: true
             }])

@@ -70,11 +70,12 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
             const errorData = await response.json()
-            console.error("OpenRouter API error:", errorData)
+            console.error("OpenRouter API error:", JSON.stringify(errorData, null, 2))
+            console.error("OpenRouter Status:", response.status)
             return NextResponse.json(
                 {
                     error: "Failed to get AI response",
-                    message: "Sorry, I encountered an error. Please try again!"
+                    message: `AI Error: ${errorData.error?.message || "Unknown error"}`
                 },
                 { status: 200 }
             )

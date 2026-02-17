@@ -136,8 +136,8 @@ export default function HelpRequestsContent({ user }: { user: User }) {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      open: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      open: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
+      in_progress: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
       completed: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
       closed: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
     }

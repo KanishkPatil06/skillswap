@@ -2,20 +2,20 @@
 
 import { useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { User } from "@supabase/supabase-js"
 
-export function useOnlineStatus(user: User | null) {
+
+export function useOnlineStatus(userId: string | undefined | null) {
     const supabase = createClient()
 
     useEffect(() => {
-        if (!user) return
+        if (!userId) return
 
         const updateLastSeen = async () => {
             try {
                 await supabase
                     .from("profiles")
                     .update({ last_seen: new Date().toISOString() })
-                    .eq("id", user.id)
+                    .eq("id", userId)
             } catch (error) {
                 console.error("Error updating last seen:", error)
             }
@@ -35,5 +35,5 @@ export function useOnlineStatus(user: User | null) {
             clearInterval(interval)
             window.removeEventListener("focus", handleFocus)
         }
-    }, [user, supabase])
+    }, [userId, supabase])
 }

@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { MapPin, ExternalLink, UserPlus, CheckCircle, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe } from "lucide-react"
+import { MapPin, ExternalLink, UserPlus, CheckCircle, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe, Briefcase } from "lucide-react"
 import { ReviewList } from "../reviews/ReviewList"
 import { ReviewModal } from "../reviews/ReviewModal"
 import { EndorsementButton } from "../reviews/EndorsementButton"
 import { RatingStars } from "../reviews/RatingStars"
 import { ReputationBadge } from "../profile/ReputationBadge"
 import { BookSessionDialog } from "../sessions/book-session-dialog"
+import { PortfolioSection } from "../profile/portfolio-section"
 import { useToast } from "@/hooks/use-toast"
 
 interface ProfileViewModalProps {
@@ -212,7 +213,11 @@ export function ProfileViewModal({
                             <TabsList className="w-full justify-start bg-[hsl(var(--card))]">
                                 <TabsTrigger value="skills" className="gap-1.5">
                                     <BookOpen className="w-3.5 h-3.5" />
-                                    Skills & Endorsements
+                                    Skills
+                                </TabsTrigger>
+                                <TabsTrigger value="portfolio" className="gap-1.5">
+                                    <Briefcase className="w-3.5 h-3.5" />
+                                    Portfolio
                                 </TabsTrigger>
                                 <TabsTrigger value="reviews" className="gap-1.5">
                                     <Star className="w-3.5 h-3.5" />
@@ -271,6 +276,10 @@ export function ProfileViewModal({
                                         </div>
                                     )}
                                 </div>
+                            </TabsContent>
+
+                            <TabsContent value="portfolio" className="mt-4">
+                                <PortfolioSection userId={user.id} isOwnProfile={false} />
                             </TabsContent>
 
                             <TabsContent value="reviews" className="mt-4">

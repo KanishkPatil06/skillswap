@@ -106,7 +106,7 @@ export function CallModal({
     const getStatusDot = () => {
         switch (callStatus) {
             case "connected":
-                return "bg-green-500 animate-pulse"
+                return "bg-purple-500 animate-pulse"
             case "connecting":
             case "ringing":
                 return "bg-yellow-500 animate-pulse"
