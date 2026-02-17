@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Send, ArrowDown, MoreVertical, Pin, BellOff, User as UserIcon, Trash2, Ban, UserX, Mic, Camera } from "lucide-react"
+import { ArrowLeft, Send, ArrowDown, MoreVertical, Pin, BellOff, User as UserIcon, Trash2, Ban, UserX, Mic, Camera, Reply, X, Search } from "lucide-react"
 import { MessageBubble } from "./message-bubble"
 import { DateSeparator } from "./date-separator"
 import { TypingIndicator } from "./typing-indicator"
@@ -44,6 +44,13 @@ interface ChatMessage {
   is_edited?: boolean
   is_deleted?: boolean
   message_reactions?: any[]
+  reply_to_id?: string | null
+  reply_to?: {
+    id: string
+    content: string
+    sender_id: string
+    message_type: string
+  }
 }
 
 interface ConnectionData {
@@ -65,6 +72,16 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   const [showCamera, setShowCamera] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const filteredMessages = useMemo(() => {
+    if (!searchQuery.trim()) return messages
+    return messages.filter(msg =>
+      msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [messages, searchQuery])
+
   const [isMuted, setIsMuted] = useState(false)
 
   // Voice call state
@@ -206,7 +223,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
       const { data: messagesData } = await supabase
         .from("chat_messages")
-        .select("*, message_reactions(*)")
+        .select("*, message_reactions(*), reply_to:reply_to_id(*)")
         .eq("connection_id", connectionId)
         .order("created_at", { ascending: true })
 
@@ -214,6 +231,16 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       const processedMessages = await processFileMessages((messagesData || []) as ChatMessage[])
       setMessages(processedMessages)
       setLoading(false)
+
+      // Fetch pinned status
+      const { data: pinData } = await supabase
+        .from('pinned_chats')
+        .select('connection_id')
+        .eq('connection_id', connectionId)
+        .eq('user_id', user.id)
+        .single()
+
+      setIsPinned(!!pinData)
 
       setTimeout(() => scrollToBottom("auto"), 100)
       setTimeout(() => markMessagesAsRead(), 500)
@@ -257,12 +284,44 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           // Optimistically Initialize reactions array if missing
           newMessage.message_reactions = []
 
+          // Hydrate reply_to if present
+          if (newMessage.reply_to_id) {
+            // Try to find in current messages first (using a ref to access latest messages would be better, but state updater works)
+            // Since we are inside setMessages updater below, we can't access 'messages' state directly here reliably without closure staleness.
+            // But we can try to fetch it if we want to be sure, OR we can look it up in the setState callback.
+
+            // Let's fetch it to be safe and consistent, as the parent message might not be loaded (though unlikely if we just replied to it)
+            const { data: replyToMsg } = await supabase
+              .from('chat_messages')
+              .select('id, content, sender_id, message_type')
+              .eq('id', newMessage.reply_to_id)
+              .single()
+
+            if (replyToMsg) {
+              newMessage.reply_to = replyToMsg
+            }
+          }
+
           const processedMessages = await processFileMessages([newMessage])
           const processedMessage = processedMessages[0]
 
           setMessages((prev) => {
             const exists = prev.some((msg) => msg.id === processedMessage.id)
             if (exists) return prev
+
+            // If we didn't fetch reply_to above (e.g. failed), try local lookup
+            if (processedMessage.reply_to_id && !processedMessage.reply_to) {
+              const parent = prev.find(m => m.id === processedMessage.reply_to_id)
+              if (parent) {
+                processedMessage.reply_to = {
+                  id: parent.id,
+                  content: parent.content,
+                  sender_id: parent.sender_id,
+                  message_type: parent.message_type as any
+                }
+              }
+            }
+
             return [...prev, processedMessage]
           })
           setTimeout(() => scrollToBottom(), 100)
@@ -398,6 +457,13 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
     }, 3000)
   }
 
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null)
+
+  const handleReply = (message: ChatMessage) => {
+    setReplyingTo(message)
+    // Focus input?
+  }
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newMessage.trim() || !connection) return
@@ -409,10 +475,12 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
         sender_id: user.id,
         content: newMessage.trim(),
         message_type: 'text',
+        reply_to_id: replyingTo?.id || null
       })
 
       if (error) throw error
       setNewMessage("")
+      setReplyingTo(null)
 
       // Trigger notification
       const recipientId = connection.user_id === user.id ? connection.connected_user_id : connection.user_id
@@ -538,12 +606,40 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
     )
   }
 
-  const messageGroups = groupMessagesByDate(messages)
+
+
+  const messageGroups = groupMessagesByDate(filteredMessages)
 
   // ... (Header and menu handlers from original - keeping mostly same but ensuring they are here)
-  const handlePinChat = () => {
-    setIsPinned(!isPinned)
-    toast({ title: isPinned ? "Chat unpinned" : "Chat pinned" })
+  const handlePinChat = async () => {
+    try {
+      if (isPinned) {
+        // Unpin
+        const { error } = await supabase
+          .from('pinned_chats')
+          .delete()
+          .eq('connection_id', connectionId)
+          .eq('user_id', user.id)
+
+        if (error) throw error
+        setIsPinned(false)
+        toast({ title: "Chat unpinned" })
+      } else {
+        // Pin
+        const { error } = await supabase
+          .from('pinned_chats')
+          .insert({
+            connection_id: connectionId,
+            user_id: user.id
+          })
+
+        if (error) throw error
+        setIsPinned(true)
+        toast({ title: "Chat pinned" })
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update pin status", variant: "destructive" })
+    }
   }
   const handleMuteNotifications = () => {
     setIsMuted(!isMuted)
@@ -567,53 +663,76 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
       <MainNav user={user} />
 
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-background border-b">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto w-full">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Link href="/connections">
-              <Button variant="ghost" size="icon" className="shrink-0">
+      <div className="sticky top-0 z-10 bg-background border-b h-16 flex items-center">
+        <div className="flex items-center justify-between px-4 w-full max-w-4xl mx-auto">
+          {isSearching ? (
+            <div className="flex items-center w-full gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              <Button variant="ghost" size="icon" onClick={() => { setIsSearching(false); setSearchQuery("") }}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-            </Link>
-            <h1 className="text-xl font-semibold truncate">
-              {connection?.profile?.full_name || "Chat"}
-            </h1>
-            <VoiceCallButton
-              connectionId={connectionId}
-              receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
-              receiverName={connection?.profile?.full_name || "User"}
-              callerName={user.user_metadata?.full_name || user.email || "User"}
-              onCallInitiated={(channelId, cId) => {
-                setCallChannelId(channelId)
-                setCallId(cId)
-                setCallRole("caller")
-                setIsCallModalOpen(true)
-              }}
-              disabled={!connection}
-            />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="shrink-0">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handlePinChat}><Pin className="w-4 h-4 mr-2" />{isPinned ? "Unpin" : "Pin"}</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMuteNotifications}><BellOff className="w-4 h-4 mr-2" />{isMuted ? "Unmute" : "Mute"}</DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/profile/${connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}`}>
-                  <UserIcon className="w-4 h-4 mr-2" />View Profile
+              <Input
+                autoFocus
+                placeholder="Search messages..."
+                className="flex-1"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <Link href="/connections">
+                  <Button variant="ghost" size="icon" className="shrink-0">
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleClearChat}><Trash2 className="w-4 h-4 mr-2" />Clear Chat</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleBlockUser}><Ban className="w-4 h-4 mr-2" />Block User</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleDisconnect} variant="destructive"><UserX className="w-4 h-4 mr-2" />Disconnect</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <h1 className="text-xl font-semibold truncate">
+                  {connection?.profile?.full_name || "Chat"}
+                </h1>
+                <VoiceCallButton
+                  connectionId={connectionId}
+                  receiverId={connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}
+                  receiverName={connection?.profile?.full_name || "User"}
+                  callerName={user.user_metadata?.full_name || user.email || "User"}
+                  onCallInitiated={(channelId, cId) => {
+                    setCallChannelId(channelId)
+                    setCallId(cId)
+                    setCallRole("caller")
+                    setIsCallModalOpen(true)
+                  }}
+                  disabled={!connection}
+                />
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setIsSearching(true)}>
+                  <Search className="w-5 h-5" />
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="shrink-0">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handlePinChat}><Pin className="w-4 h-4 mr-2" />{isPinned ? "Unpin" : "Pin"}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleMuteNotifications}><BellOff className="w-4 h-4 mr-2" />{isMuted ? "Unmute" : "Mute"}</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/profile/${connection?.user_id === user.id ? connection?.connected_user_id : connection?.user_id}`}>
+                        <UserIcon className="w-4 h-4 mr-2" />View Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleClearChat}><Trash2 className="w-4 h-4 mr-2" />Clear Chat</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleBlockUser}><Ban className="w-4 h-4 mr-2" />Block User</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleDisconnect} variant="destructive"><UserX className="w-4 h-4 mr-2" />Disconnect</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -664,6 +783,8 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
                       onEdit={(newContent) => handleEditMessage(message.id, newContent)}
                       onDelete={() => handleDeleteMessage(message.id)}
                       onReact={() => { }} // Component handles DB update, we just rely on subscription
+                      onReply={() => handleReply(message)}
+                      replyTo={message.reply_to}
                     />
                   ))}
                 </div>
@@ -686,6 +807,23 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
           >
             <ArrowDown className="w-5 h-5" />
           </button>
+        )}
+
+
+        {/* Reply Banner */}
+        {replyingTo && (
+          <div className="bg-muted/50 p-2 flex items-center justify-between border-t border-b px-4">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <Reply className="w-4 h-4 text-muted-foreground shrink-0" />
+              <div className="flex flex-col text-sm overflow-hidden">
+                <span className="font-medium text-xs">Replying to {replyingTo.sender_id === user.id ? 'yourself' : connection?.profile?.full_name}</span>
+                <span className="text-muted-foreground truncate">{replyingTo.message_type === 'text' ? replyingTo.content : `[${replyingTo.message_type}]`}</span>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setReplyingTo(null)} className="h-6 w-6">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         )}
 
         {/* Message Input */}

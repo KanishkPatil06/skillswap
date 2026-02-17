@@ -263,7 +263,14 @@ export function BookSessionDialog({
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full text-[hsl(var(--muted-foreground))] text-sm gap-1">
                                             <Clock className="w-5 h-5 opacity-40" />
-                                            No available slots for this date
+                                            {availability.length === 0 ? (
+                                                <div className="text-center px-4">
+                                                    <p>Mentor has not set any availability.</p>
+                                                    <p className="text-xs opacity-70 mt-1">Try messaging them to request a slot.</p>
+                                                </div>
+                                            ) : (
+                                                "No available slots for this date"
+                                            )}
                                         </div>
                                     )
                                 )}
@@ -284,9 +291,19 @@ export function BookSessionDialog({
                     </div>
                 </div>
                 <div className="px-6 pb-6">
-                    <Button onClick={handleBook} disabled={!date || !timeSlot || loading} className="w-full h-11 text-sm font-semibold shadow-lg" size="lg">
+                    <Button
+                        onClick={handleBook}
+                        disabled={!date || !timeSlot || loading}
+                        className={cn(
+                            "w-full h-11 text-sm font-semibold shadow-lg",
+                            !date || !timeSlot ? "opacity-70 cursor-not-allowed" : ""
+                        )}
+                        size="lg"
+                    >
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Confirm Booking — {duration} min session
+                        {!date ? "Pick a date to continue" :
+                            !timeSlot ? "Select a time slot" :
+                                `Confirm Booking — ${duration} min session`}
                     </Button>
                 </div>
             </DialogContent>

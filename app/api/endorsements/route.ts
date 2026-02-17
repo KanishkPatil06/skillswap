@@ -66,8 +66,15 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { endorsed_user_id, skill_id } = body;
 
+        console.log("Endorsement Request:", {
+            endorser: user.id,
+            endorsed: endorsed_user_id,
+            skill: skill_id
+        });
+
         // Validate input
         if (!endorsed_user_id || !skill_id) {
+            console.error("Missing fields:", { endorsed_user_id, skill_id });
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }

@@ -23,7 +23,7 @@ type SignalPayload =
     | { type: "join"; from: string }
     | { type: "leave"; from: string }
 
-export function VideoRoom({ url, sessionId }: { url: string; sessionId: string }) {
+export function VideoRoom({ sessionId }: { sessionId: string }) {
     const router = useRouter()
     const supabase = createClient()
 

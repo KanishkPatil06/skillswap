@@ -7,16 +7,17 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreVertical, Pencil, Trash2, Smile } from "lucide-react"
+import { MoreVertical, Pencil, Trash2, Smile, Reply } from "lucide-react"
 
 interface MessageActionsProps {
     isOwnMessage: boolean
     onEdit: () => void
     onDelete: () => void
     onReact: (emoji: string) => void
+    onReply: () => void
 }
 
-export function MessageActions({ isOwnMessage, onEdit, onDelete, onReact }: MessageActionsProps) {
+export function MessageActions({ isOwnMessage, onEdit, onDelete, onReact, onReply }: MessageActionsProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -25,6 +26,10 @@ export function MessageActions({ isOwnMessage, onEdit, onDelete, onReact }: Mess
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isOwnMessage ? "end" : "start"}>
+                <DropdownMenuItem onClick={onReply}>
+                    <Reply className="mr-2 h-4 w-4" />
+                    Reply
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onReact("👍")}>
                     <Smile className="mr-2 h-4 w-4" />
                     React

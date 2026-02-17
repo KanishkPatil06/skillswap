@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { MapPin, ExternalLink, UserPlus, CheckCircle, Loader2, MessageSquare, Star, Award, BookOpen, Calendar, Globe, Briefcase } from "lucide-react"
 import { ReviewList } from "../reviews/ReviewList"
-import { ReviewModal } from "../reviews/ReviewModal"
 import { EndorsementButton } from "../reviews/EndorsementButton"
 import { RatingStars } from "../reviews/RatingStars"
 import { ReputationBadge } from "../profile/ReputationBadge"
@@ -38,7 +37,6 @@ export function ProfileViewModal({
     isConnected,
     connectionId,
 }: ProfileViewModalProps) {
-    const [reviewModalOpen, setReviewModalOpen] = useState(false)
     const { toast } = useToast()
 
     if (!user) return null
@@ -191,15 +189,6 @@ export function ProfileViewModal({
                                 <MessageSquare className="w-4 h-4" />
                                 Message
                             </Button>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                onClick={() => setReviewModalOpen(true)}
-                                className="gap-2"
-                            >
-                                <Star className="w-4 h-4" />
-                                Review
-                            </Button>
                         </div>
                     </div>
 
@@ -290,12 +279,6 @@ export function ProfileViewModal({
                 </DialogContent>
             </Dialog>
 
-            <ReviewModal
-                isOpen={reviewModalOpen}
-                onClose={() => setReviewModalOpen(false)}
-                revieweeId={user.id}
-                revieweeName={user.full_name || "User"}
-            />
         </>
     )
 }

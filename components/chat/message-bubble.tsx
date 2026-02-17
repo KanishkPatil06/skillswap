@@ -29,6 +29,13 @@ interface MessageBubbleProps {
     onEdit?: (newContent: string) => void
     onDelete?: () => void
     onReact?: (emoji: string) => void
+    onReply?: () => void
+    replyTo?: {
+        id: string
+        content: string
+        sender_id: string
+        message_type: string
+    }
 }
 
 export function MessageBubble({
@@ -51,7 +58,9 @@ export function MessageBubble({
     currentUserId,
     onEdit,
     onDelete,
-    onReact
+    onReact,
+    onReply,
+    replyTo
 }: MessageBubbleProps) {
     const [mounted, setMounted] = useState(false)
     const [noteExpanded, setNoteExpanded] = useState(false)
@@ -121,12 +130,29 @@ export function MessageBubble({
                         setEditContent(content)
                         setIsEditing(true)
                     }}
+                    onReply={() => onReply?.()}
                     onDelete={() => onDelete?.()}
                     onReact={(emoji) => onReact?.(emoji)}
                 />
             )}
 
             <div className={cn("flex flex-col max-w-[70%] sm:max-w-md")}>
+
+                {/* Reply Context */}
+                {replyTo && (
+                    <div className={cn(
+                        "text-xs mb-1 px-3 py-1 rounded-lg border-l-2 bg-muted/30 opacity-80 truncate cursor-pointer hover:opacity-100 transition-opacity",
+                        isOwn ? "items-end text-right border-primary/50 self-end" : "items-start text-left border-primary/50 self-start"
+                    )}>
+                        <span className="font-semibold block opacity-70">
+                            Replying to {replyTo.sender_id === currentUserId ? 'You' : (senderName || 'them')}
+                        </span>
+                        <span className="truncate block max-w-[200px]">
+                            {replyTo.message_type === 'text' ? replyTo.content : `[${replyTo.message_type}]`}
+                        </span>
+                    </div>
+                )}
+
                 {!isOwn && senderName && (
                     <span className="text-xs text-muted-foreground mb-1 px-1">
                         {senderName}

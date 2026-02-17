@@ -6,11 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CalendarIcon, Clock, Video, User as UserIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Clock, Video, User as UserIcon, Loader2, CheckCircle2, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { AvailabilitySettings } from "@/components/sessions/availability-settings"
 import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
+import { SessionReviewModal } from "@/components/reviews/session-review-modal"
 
 interface Session {
     id: string
@@ -26,6 +27,7 @@ interface Session {
     mentor: { full_name: string; avatar_url: string }
     learner: { full_name: string; avatar_url: string }
     skill: { name: string }
+    reviews: { reviewer_id: string }[]
 }
 
 export function MySessions({ user }: { user: User }) {
@@ -48,7 +50,8 @@ export function MySessions({ user }: { user: User }) {
           *,
           mentor:mentor_id(full_name, avatar_url),
           learner:learner_id(full_name, avatar_url),
-          skill:skill_id(name)
+          skill:skill_id(name),
+          reviews(reviewer_id)
         `)
                 .or(`mentor_id.eq.${user.id},learner_id.eq.${user.id}`)
                 .order('scheduled_at', { ascending: true })
@@ -57,9 +60,14 @@ export function MySessions({ user }: { user: User }) {
                 console.error('Supabase error fetching sessions:', error)
                 throw error
             }
-            console.log("Fetched sessions:", data)
-            // toast.info(`Debug: Fetched ${data?.length || 0} sessions`)
-            setSessions(data || [])
+            // cast fetched data to Session[]
+            const typedData = data?.map((item: any) => ({
+                ...item,
+                reviews: item.reviews || []
+            })) as Session[]
+
+            console.log("Fetched sessions:", typedData)
+            setSessions(typedData || [])
         } catch (error) {
             console.error('Error fetching sessions:', error)
             toast.error('Failed to load sessions')
@@ -80,6 +88,7 @@ export function MySessions({ user }: { user: User }) {
         const isMentor = session.mentor_id === user.id
         const otherPerson = isMentor ? session.learner : session.mentor
         const role = isMentor ? "Mentor" : "Learner"
+        const hasReviewed = session.reviews?.some(r => r.reviewer_id === user.id)
 
         // Debug log for missing data
         if (!otherPerson) {
@@ -129,20 +138,7 @@ export function MySessions({ user }: { user: User }) {
                                     onClick={async () => {
                                         try {
                                             toast.loading("Joining session...")
-                                            const response = await fetch('/api/video/room', {
-                                                method: 'POST',
-                                                body: JSON.stringify({ sessionId: session.id })
-                                            })
-
-                                            if (!response.ok) throw new Error("Failed to join")
-
-                                            const { url } = await response.json()
-
-                                            // Ensure we update local state if link changed (optional but good)
-                                            // Navigate to the room page
-                                            // We use a Next.js router
-                                            // Since we are inside a map, we need the router from the parent or use window.location
-                                            // The hook is inside MySessions, so we can use router.
+                                            // The page.tsx now handles access without meeting_link
                                             window.location.href = `/sessions/room/${session.id}`
                                         } catch (e) {
                                             toast.dismiss()
@@ -152,6 +148,82 @@ export function MySessions({ user }: { user: User }) {
                                 >
                                     <Video className="w-4 h-4 mr-2" />
                                     Join Meeting
+                                </Button>
+                            )}
+
+                            {(session.status === 'scheduled' || session.status === 'completed' || session.status === 'cancelled') && (
+                                <Button
+                                    className="w-full md:w-auto"
+                                    variant="destructive"
+                                    onClick={async () => {
+                                        if (!confirm("Are you sure you want to delete this session? This action cannot be undone.")) return;
+
+                                        try {
+                                            toast.loading("Deleting session...")
+                                            const response = await fetch(`/api/sessions?sessionId=${session.id}`, {
+                                                method: 'DELETE',
+                                            })
+
+                                            if (!response.ok) throw new Error("Failed to delete")
+
+                                            toast.dismiss()
+                                            toast.success("Session deleted")
+                                            fetchSessions()
+                                        } catch (e) {
+                                            toast.dismiss()
+                                            toast.error("Could not delete session")
+                                        }
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </Button>
+                            )}
+
+                            {session.status === 'scheduled' && new Date(session.scheduled_at) < new Date() && (
+                                <Button
+                                    className="w-full md:w-auto"
+                                    variant="outline"
+                                    onClick={async () => {
+                                        try {
+                                            toast.loading("Updating session...")
+                                            const response = await fetch('/api/sessions', {
+                                                method: 'PATCH',
+                                                body: JSON.stringify({ sessionId: session.id, status: 'completed' })
+                                            })
+
+                                            if (!response.ok) throw new Error("Failed to update")
+
+                                            toast.dismiss()
+                                            toast.success("Session marked as completed")
+                                            fetchSessions()
+                                        } catch (e) {
+                                            toast.dismiss()
+                                            toast.error("Could not update session")
+                                        }
+                                    }}
+                                >
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    Mark Completed
+                                </Button>
+                            )}
+
+                            {session.status === 'completed' && !hasReviewed && (
+                                <SessionReviewModal
+                                    sessionId={session.id}
+                                    revieweeId={isMentor ? session.learner_id : session.mentor_id}
+                                    revieweeName={otherPerson?.full_name || "User"}
+                                    onReviewSubmitted={fetchSessions}
+                                >
+                                    <Button size="sm" variant="outline" className="gap-2">
+                                        <div className="w-4 h-4" /> {/* Placeholder icon */}
+                                        Rate Session
+                                    </Button>
+                                </SessionReviewModal>
+                            )}
+                            {session.status === 'completed' && hasReviewed && (
+                                <Button size="sm" variant="ghost" disabled className="text-muted-foreground">
+                                    Reviewed
                                 </Button>
                             )}
                         </div>

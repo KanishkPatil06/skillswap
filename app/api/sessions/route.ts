@@ -148,3 +148,101 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+export async function PATCH(request: Request) {
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { sessionId, status } = body;
+
+        if (!sessionId || !status) {
+            return NextResponse.json({ error: 'Missing sessionId or status' }, { status: 400 });
+        }
+
+        // Verify user is part of the session
+        const { data: session, error: fetchError } = await supabase
+            .from('sessions')
+            .select('mentor_id, learner_id')
+            .eq('id', sessionId)
+            .single();
+
+        if (fetchError || !session) {
+            return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        }
+
+        if (session.mentor_id !== user.id && session.learner_id !== user.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const { data: updatedSession, error: updateError } = await supabase
+            .from('sessions')
+            .update({ status })
+            .eq('id', sessionId)
+            .select()
+            .single();
+
+        if (updateError) {
+            console.error('Error updating session:', updateError);
+            return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
+        }
+
+        return NextResponse.json(updatedSession);
+    } catch (error) {
+        console.error('Unexpected error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const sessionId = searchParams.get('sessionId');
+
+        if (!sessionId) {
+            return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
+        }
+
+        // Verify user is part of the session
+        const { data: session, error: fetchError } = await supabase
+            .from('sessions')
+            .select('mentor_id, learner_id')
+            .eq('id', sessionId)
+            .single();
+
+        if (fetchError || !session) {
+            return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        }
+
+        if (session.mentor_id !== user.id && session.learner_id !== user.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const { error: deleteError } = await supabase
+            .from('sessions')
+            .delete()
+            .eq('id', sessionId);
+
+        if (deleteError) {
+            console.error('Error deleting session:', deleteError);
+            return NextResponse.json({ error: 'Failed to delete session' }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Unexpected error:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}

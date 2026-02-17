@@ -1,106 +1,140 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: NextRequest) {
-    const supabase = await createClient();
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-        return NextResponse.json(
-            { error: "User ID is required" },
-            { status: 400 }
-        );
-    }
-
+// POST /api/reviews - Create a new review
+export async function POST(req: NextRequest) {
     try {
-        const { data: reviews, error } = await supabase
-            .from("reviews")
-            .select(`
-        *,
-        reviewer:reviewer_id (
-          id,
-          full_name,
-          avatar_url
-        )
-      `)
-            .eq("reviewee_id", userId)
-            .order("created_at", { ascending: false });
+        const supabase = await createClient()
+        const {
+            data: { user },
+        } = await supabase.auth.getUser()
 
-        if (error) {
-            console.error("Error fetching reviews:", error);
-            return NextResponse.json(
-                { error: "Failed to fetch reviews" },
-                { status: 500 }
-            );
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        return NextResponse.json(reviews);
-    } catch (err) {
-        console.error("Unexpected error:", err);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
-    }
-}
-
-export async function POST(request: NextRequest) {
-    const supabase = await createClient();
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-        return NextResponse.json(
-            { error: "Unauthorized" },
-            { status: 401 }
-        );
-    }
-
-    try {
-        const body = await request.json();
-        const { reviewee_id, rating, comment } = body;
+        const body = await req.json()
+        const { session_id, reviewee_id, rating, comment } = body
 
         // Validate input
-        if (!reviewee_id || !rating) {
+        if (!session_id || !reviewee_id || !rating) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
-            );
+            )
         }
 
-        if (user.id === reviewee_id) {
+        if (rating < 1 || rating > 5) {
             return NextResponse.json(
-                { error: "You cannot review yourself" },
+                { error: "Rating must be between 1 and 5" },
                 { status: 400 }
-            );
+            )
         }
 
-        const { data, error } = await supabase
+        // Verify the user was a participant in the session and it is completed
+        const { data: session, error: sessionError } = await supabase
+            .from("sessions")
+            .select("mentor_id, learner_id, status")
+            .eq("id", session_id)
+            .single()
+
+        if (sessionError || !session) {
+            return NextResponse.json({ error: "Session not found" }, { status: 404 })
+        }
+
+        if (session.status !== "completed") {
+            return NextResponse.json(
+                { error: "Session must be completed to leave a review" },
+                { status: 400 }
+            )
+        }
+
+        if (session.mentor_id !== user.id && session.learner_id !== user.id) {
+            return NextResponse.json(
+                { error: "You were not a participant in this session" },
+                { status: 403 }
+            )
+        }
+
+        // Insert review
+        const { data: review, error: reviewError } = await supabase
             .from("reviews")
             .insert({
                 reviewer_id: user.id,
                 reviewee_id,
+                session_id,
                 rating,
                 comment,
             })
             .select()
-            .single();
+            .single()
 
-        if (error) {
-            console.error("Error submitting review:", error);
+        if (reviewError) {
+            if (reviewError.code === "23505") {
+                return NextResponse.json(
+                    { error: "You have already reviewed this session" },
+                    { status: 409 }
+                )
+            }
+            console.error("Error creating review:", reviewError)
             return NextResponse.json(
-                { error: "Failed to submit review" },
+                { error: "Failed to create review" },
                 { status: 500 }
-            );
+            )
         }
 
-        return NextResponse.json(data);
+        return NextResponse.json(review)
     } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Review creation error:", err)
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }
-        );
+        )
+    }
+}
+
+// GET /api/reviews - Get reviews for a user or session
+export async function GET(req: NextRequest) {
+    try {
+        const supabase = await createClient()
+        const { searchParams } = new URL(req.url)
+        const userId = searchParams.get("userId")
+        const sessionId = searchParams.get("sessionId")
+
+        let query = supabase
+            .from("reviews")
+            .select(`
+                *,
+                reviewer:reviewer_id (
+                    id,
+                    full_name,
+                    avatar_url
+                )
+            `)
+
+        if (sessionId) {
+            query = query.eq("session_id", sessionId)
+        } else if (userId) {
+            query = query.eq("reviewee_id", userId).order("created_at", { ascending: false })
+        } else {
+            return NextResponse.json(
+                { error: "UserId or SessionId required" },
+                { status: 400 }
+            )
+        }
+
+        const { data: reviews, error } = await query
+
+        if (error) {
+            console.error("Error fetching reviews:", error)
+            return NextResponse.json({ error: error.message }, { status: 500 })
+        }
+
+        return NextResponse.json(reviews)
+    } catch (err) {
+        return NextResponse.json(
+            { error: "Internal server error" },
+            { status: 500 }
+        )
     }
 }

@@ -27,13 +27,10 @@ export default async function VideoPage({ params }: { params: Promise<{ sessionI
     // Ideally, the "Join" button creates it before navigating here.
     // But if we are here and link exists, use it.
 
-    if (!session.meeting_link) {
-        // Redirect back to sessions with error? Or handle creation here?
-        // Let's redirect for now as the button logic handles creation.
-        redirect("/sessions?error=no-link")
-    }
+    // We don't need a pre-existing meeting_link for our custom WebRTC implementation
+    // The room ID is based on the session ID.
 
     return (
-        <VideoRoom url={session.meeting_link} sessionId={sessionId} />
+        <VideoRoom sessionId={sessionId} />
     )
 }
