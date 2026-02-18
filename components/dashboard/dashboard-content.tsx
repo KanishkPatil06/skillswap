@@ -18,40 +18,131 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GlowingCard } from "@/components/ui/glowing-card"
 import { AnimatedAvatar } from "@/components/ui/animated-avatar"
 
+import { subDays, isAfter, isBefore, parseISO } from "date-fns"
+
 export default function DashboardContent({ user }: { user: User }) {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
-  const [stats, setStats] = useState({ skills: 0, connections: 0, requests: 0, sessions_completed: 0, reputation_score: 0 })
+  const [stats, setStats] = useState({
+    skills: 0,
+    connections: 0,
+    requests: 0,
+    sessions_completed: 0,
+    learning_hours: 0,
+    reputation_score: 0,
+    // Trends
+    sessions_trend: "",
+    sessions_trend_up: true,
+    learning_trend: "",
+    learning_trend_up: true,
+    connections_trend: "",
+    connections_trend_up: true
+  })
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
+  const fetchProfile = async () => {
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+    const { data: userSkills } = await supabase.from("user_skills").select("*").eq("user_id", user.id)
+    const { data: connections } = await supabase
+      .from("connections")
+      .select("*")
+      .or(`user_id.eq.${user.id},connected_user_id.eq.${user.id}`)
+      .eq("status", "accepted")
+
+    const { data: requests } = await supabase
+      .from("help_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "open")
+
+    const { data: sessions } = await supabase
+      .from("sessions")
+      .select("*")
+      .or(`initiator_id.eq.${user.id},participant_id.eq.${user.id}`)
+
+    // Process Sessions & Learning Hours
+    const completedSessions = sessions?.filter(s => s.status === 'completed') || []
+    const learningSessions = completedSessions.filter(s => s.initiator_id === user.id)
+
+    const totalMinutes = learningSessions.reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
+    const learningHours = parseFloat((totalMinutes / 60).toFixed(1))
+
+    // Growth Calculations (Last 7 Days vs Previous 7 Days)
+    const now = new Date()
+    const oneWeekAgo = subDays(now, 7)
+    const twoWeeksAgo = subDays(now, 14)
+
+    // Sessions Growth
+    const currentWeekSessions = completedSessions.filter(s =>
+      s.completed_at && isAfter(parseISO(s.completed_at), oneWeekAgo)
+    ).length
+
+    const previousWeekSessions = completedSessions.filter(s =>
+      s.completed_at &&
+      isAfter(parseISO(s.completed_at), twoWeeksAgo) &&
+      isBefore(parseISO(s.completed_at), oneWeekAgo)
+    ).length
+
+    const sessionGrowth = previousWeekSessions === 0
+      ? currentWeekSessions * 100
+      : Math.round(((currentWeekSessions - previousWeekSessions) / previousWeekSessions) * 100)
+
+    // Learning Hours Growth
+    const currentWeekMinutes = learningSessions
+      .filter(s => s.completed_at && isAfter(parseISO(s.completed_at), oneWeekAgo))
+      .reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
+
+    const previousWeekMinutes = learningSessions
+      .filter(s => s.completed_at && isAfter(parseISO(s.completed_at), twoWeeksAgo) && isBefore(parseISO(s.completed_at), oneWeekAgo))
+      .reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
+
+    const learningGrowth = previousWeekMinutes === 0
+      ? (currentWeekMinutes > 0 ? 100 : 0)
+      : Math.round(((currentWeekMinutes - previousWeekMinutes) / previousWeekMinutes) * 100)
+
+    setProfile(profileData)
+    setStats({
+      skills: userSkills?.length || 0,
+      connections: connections?.length || 0,
+      requests: requests?.length || 0,
+      sessions_completed: completedSessions.length,
+      learning_hours: learningHours,
+      reputation_score: profileData?.rating_score || 0,
+      // Trends
+      sessions_trend: `${sessionGrowth > 0 ? '+' : ''}${sessionGrowth}% this week`,
+      sessions_trend_up: sessionGrowth >= 0,
+      learning_trend: `${learningGrowth > 0 ? '+' : ''}${learningGrowth}% vs last week`,
+      learning_trend_up: learningGrowth >= 0,
+      connections_trend: "New request",
+      connections_trend_up: true
+    })
+    setLoading(false)
+  }
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-      const { data: userSkills } = await supabase.from("user_skills").select("*").eq("user_id", user.id)
-      const { data: connections } = await supabase
-        .from("connections")
-        .select("*")
-        .or(`user_id.eq.${user.id},connected_user_id.eq.${user.id}`)
-        .eq("status", "accepted")
-
-      const { data: requests } = await supabase
-        .from("help_requests")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "open")
-
-      setProfile(profileData)
-      setStats({
-        skills: userSkills?.length || 0,
-        connections: connections?.length || 0,
-        requests: requests?.length || 0,
-        sessions_completed: 0, // Placeholder
-        reputation_score: profileData?.rating_score || 0,
-      })
-      setLoading(false)
-    }
     fetchProfile()
+
+    // Realtime Subscription
+    const channel = supabase
+      .channel('dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => {
+        fetchProfile()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'help_requests' }, () => {
+        fetchProfile()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' }, () => {
+        fetchProfile()
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, () => {
+        fetchProfile()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [user.id, supabase])
 
   const getInitials = (name: string | null) => {
@@ -126,17 +217,17 @@ export default function DashboardContent({ user }: { user: User }) {
               icon={BookOpen}
               label="Sessions"
               value={stats.sessions_completed}
-              trend="2 this week"
-              trendUp={true}
+              trend={stats.sessions_trend}
+              trendUp={stats.sessions_trend_up}
               delay={0.1}
               colorClass="text-blue-500"
             />
             <StatCard
               icon={Clock}
               label="Learning Hours"
-              value="12.5"
-              trend="15% vs last week"
-              trendUp={true}
+              value={stats.learning_hours}
+              trend={stats.learning_trend}
+              trendUp={stats.learning_trend_up}
               delay={0.2}
               colorClass="text-violet-500"
             />
@@ -151,8 +242,8 @@ export default function DashboardContent({ user }: { user: User }) {
               icon={Users}
               label="Connections"
               value={stats.connections}
-              trend="New request"
-              trendUp={true}
+              trend={stats.connections_trend}
+              trendUp={stats.connections_trend_up}
               delay={0.4}
               colorClass="text-pink-500"
             />

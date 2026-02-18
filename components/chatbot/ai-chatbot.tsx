@@ -49,6 +49,16 @@ export function AIChatbot() {
         }
     }, [isOpen, isMinimized])
 
+    // Listen for voice command to open chatbot
+    useEffect(() => {
+        const handleOpenChatbot = () => {
+            setIsOpen(true)
+            setIsMinimized(false)
+        }
+        window.addEventListener("open-chatbot", handleOpenChatbot)
+        return () => window.removeEventListener("open-chatbot", handleOpenChatbot)
+    }, [])
+
     const sendMessage = async () => {
         if (!input.trim() || isLoading) return
 
