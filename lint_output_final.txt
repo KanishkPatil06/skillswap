@@ -1,0 +1,26 @@
+﻿
+> my-v0-project@0.1.0 lint
+> next lint
+
+npm : Invalid 
+project directory 
+provided, no such 
+directory: D:\skillsw
+ap-main\lint
+At line:1 char:1
++ npm run lint *>&1 
+| Out-File -Encoding 
+UTF8 
+lint_output_final.txt
++ ~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Invalid   
+  project...lswap    
+-main\lint:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 

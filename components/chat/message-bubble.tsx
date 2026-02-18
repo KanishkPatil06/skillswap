@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Check, CheckCheck } from "lucide-react"
+import { Check, CheckCheck, Phone, PhoneOff } from "lucide-react"
 import { useState, useEffect } from "react"
 import { MessageActions } from "./message-actions"
 import { MessageReactions } from "./message-reactions"
@@ -15,7 +15,7 @@ interface MessageBubbleProps {
     isOwn: boolean
     senderName?: string
     isRead?: boolean
-    messageType?: 'text' | 'file' | 'note' | 'audio'
+    messageType?: 'text' | 'file' | 'note' | 'audio' | 'call'
     fileUrl?: string
     fileName?: string
     fileSize?: number
@@ -102,6 +102,39 @@ export function MessageBubble({
         if (type.includes('pdf')) return '📕'
         if (type.includes('zip') || type.includes('rar')) return '📦'
         return '📄'
+    }
+
+    if (messageType === 'call') {
+        const isCallRejected = fileName === 'rejected' || fileName === 'missed'
+        // Only show red "Missed call" if I am the receiver (!isOwn)
+        const showAsMissed = !isOwn && isCallRejected
+
+        return (
+            <div className={cn("flex w-full my-2", isOwn ? "justify-end" : "justify-start")}>
+                <div className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl border shadow-sm max-w-xs transition-all hover:scale-105 cursor-pointer",
+                    showAsMissed
+                        ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50"
+                        : "bg-muted/50 border-border/50",
+                    isOwn ? "rounded-br-sm" : "rounded-bl-sm"
+                )}>
+                    <div className={cn(
+                        "p-2 rounded-full",
+                        showAsMissed ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400" : "bg-primary/10 text-primary"
+                    )}>
+                        {showAsMissed ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className={cn("font-semibold text-sm", showAsMissed ? "text-red-600 dark:text-red-400" : "text-foreground")}>
+                            {showAsMissed ? "Missed call" : "Voice call"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            {showAsMissed ? "Tap to call back" : `${formatTime(timestamp)}${fileSize ? ` • ${Math.floor(fileSize / 60)} min ${fileSize % 60} sec` : ''}`}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     if (isDeleted) {

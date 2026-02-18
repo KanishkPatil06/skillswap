@@ -23,6 +23,7 @@ export function useWebRTC({
 }: UseWebRTCOptions) {
     const [callStatus, setCallStatus] = useState<CallStatus>("idle")
     const [isMuted, setIsMuted] = useState(false)
+    const [isSpeakerOn, setIsSpeakerOn] = useState(false)
     const [callDuration, setCallDuration] = useState(0)
     const [error, setError] = useState<string | null>(null)
 
@@ -93,6 +94,7 @@ export function useWebRTC({
         // Notify remote peer
         if (channelRef.current) {
             try {
+                console.log("📤 Sending call_ended signal")
                 await channelRef.current.send({
                     type: "broadcast",
                     event: "call_ended",
@@ -118,8 +120,13 @@ export function useWebRTC({
             console.error("Failed to update call record:", e)
         }
 
-        cleanup()
+        // Trigger local end callback (closes modal) BEFORE cleanup to avoid race conditions
         onCallEnded?.()
+
+        // Small delay to ensure signal goes out before cutting connection
+        setTimeout(() => {
+            cleanup()
+        }, 100)
     }, [callId, userId, callDuration, cleanup, onCallEnded])
 
     // Get microphone access
@@ -378,8 +385,8 @@ export function useWebRTC({
                     if (payload.userId !== userId) {
                         console.log("📵 Remote peer ended the call")
                         setCallStatus("ended")
+                        onCallEnded?.() // Close modal immediately
                         cleanup()
-                        onCallEnded?.()
                     }
                 })
                 .on("broadcast", { event: "call_accepted" }, () => {
@@ -432,6 +439,45 @@ export function useWebRTC({
         onCallEnded,
     ])
 
+    // Toggle speaker
+    const toggleSpeaker = useCallback(async () => {
+        if (!remoteAudio.current) return
+
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices()
+            const audioOutputs = devices.filter((device) => device.kind === "audiooutput")
+
+            if (audioOutputs.length > 0) {
+                // If currently on default/earpiece (which usually is default or first), try switching to the next one
+                // Note: Without specific "speaker" label ID, we might just toggle between available outputs
+                // For mobile, often 'speaker' is a specific sink ID if supported, or we just rely on system default.
+                // Here we will toggle between the first two available outputs if > 1.
+
+                // If we are "off" (false), we want to go "on" (true) -> switch to speaker
+                // If we are "on" (true), we want to go "off" (false) -> switch to default/earpiece
+
+                const targetDeviceId = !isSpeakerOn
+                    ? audioOutputs[1]?.deviceId || audioOutputs[0].deviceId // Try second device (often speaker) or fallback to first
+                    : audioOutputs[0].deviceId // Back to first/default
+
+
+                if ("setSinkId" in remoteAudio.current) {
+                    await (remoteAudio.current as any).setSinkId(targetDeviceId)
+                    setIsSpeakerOn(!isSpeakerOn)
+                    console.log(`🔊 Toggled speaker to ${targetDeviceId}`)
+                } else {
+                    console.warn("⚠️ setSinkId not supported on this browser")
+                    // Still toggle state for UI feedback
+                    setIsSpeakerOn(!isSpeakerOn)
+                }
+            } else {
+                setIsSpeakerOn(!isSpeakerOn)
+            }
+        } catch (e) {
+            console.error("Failed to toggle speaker:", e)
+        }
+    }, [isSpeakerOn])
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -442,10 +488,12 @@ export function useWebRTC({
     return {
         callStatus,
         isMuted,
+        isSpeakerOn,
         callDuration,
         error,
         startCall,
         endCall,
         toggleMute,
+        toggleSpeaker,
     }
 }

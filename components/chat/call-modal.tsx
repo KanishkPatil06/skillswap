@@ -8,7 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { PhoneOff, Mic, MicOff, AlertCircle } from "lucide-react"
+import { PhoneOff, Mic, MicOff, AlertCircle, Volume2, Headphones } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useWebRTC } from "@/hooks/useWebRTC"
 
@@ -48,6 +48,8 @@ export function CallModal({
         startCall,
         endCall,
         toggleMute,
+        toggleSpeaker,
+        isSpeakerOn,
     } = useWebRTC({
         callChannelId,
         callId,
@@ -119,7 +121,11 @@ export function CallModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleEndCall()}>
-            <DialogContent className="sm:max-w-lg border-2 bg-white dark:bg-gray-950">
+            <DialogContent
+                className="sm:max-w-lg border-2 bg-white dark:bg-gray-950"
+                onInteractOutside={(e) => e.preventDefault()}
+                onEscapeKeyDown={(e) => e.preventDefault()}
+            >
                 <DialogHeader className="pb-2">
                     <DialogTitle className="text-center text-lg font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                         {callStatus === "connecting" || callStatus === "ringing"
@@ -199,6 +205,25 @@ export function CallModal({
                             </Button>
                             <span className="text-xs font-medium text-destructive">
                                 End Call
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-2">
+                            <Button
+                                size="icon"
+                                variant={isSpeakerOn ? "default" : "outline"}
+                                onClick={toggleSpeaker}
+                                className={`rounded-full h-16 w-16 shadow-lg hover:scale-110 transition-transform ${isSpeakerOn ? 'shadow-[0_0_15px_rgba(var(--primary),0.5)] animate-pulse' : ''}`}
+                                disabled={callStatus !== "connected"}
+                            >
+                                {isSpeakerOn ? (
+                                    <Volume2 className="w-6 h-6" />
+                                ) : (
+                                    <Headphones className="w-6 h-6" />
+                                )}
+                            </Button>
+                            <span className="text-xs font-medium text-muted-foreground">
+                                {isSpeakerOn ? "Speaker" : "Earphone"}
                             </span>
                         </div>
                     </div>

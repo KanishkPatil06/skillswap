@@ -18,7 +18,6 @@ import { VoiceRecorder } from "./voice-recorder"
 import { CameraCapture } from "./camera-capture"
 import { CallModal } from "./call-modal"
 import { IncomingCallNotification } from "./incoming-call-notification"
-import { MainNav } from "@/components/navigation/main-nav"
 import { parseStringAsUTC } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -34,7 +33,7 @@ interface ChatMessage {
   sender_id: string
   created_at: string
   read_at?: string | null
-  message_type?: 'text' | 'file' | 'note' | 'audio'
+  message_type?: 'text' | 'file' | 'note' | 'audio' | 'call'
   file_url?: string | null
   file_name?: string | null
   file_size?: number | null
@@ -579,7 +578,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <MainNav user={user} />
+
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center space-y-4">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
@@ -593,7 +592,7 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
   if (!connection) {
     return (
       <div className="min-h-screen bg-background">
-        <MainNav user={user} />
+
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center space-y-4">
             <p className="text-muted-foreground">Connection not found</p>
@@ -660,7 +659,6 @@ export default function ChatContent({ user, connectionId }: { user: User; connec
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <MainNav user={user} />
 
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-background border-b h-16 flex items-center">

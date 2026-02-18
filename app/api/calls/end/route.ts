@@ -34,6 +34,29 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Failed to update call record' }, { status: 500 })
         }
 
+        // Fetch the full call record to get connection_id and caller/receiver details
+        const { data: callRecord, error: fetchError } = await supabase
+            .from('call_history')
+            .select('*')
+            .eq('id', callId)
+            .single()
+
+        if (!fetchError && callRecord) {
+            const isMissed = status === 'rejected' || status === 'missed'
+            const messageContent = isMissed ? 'Missed call' : 'Voice call'
+
+            // Insert chat message
+            await supabase.from('chat_messages').insert({
+                connection_id: callRecord.connection_id,
+                sender_id: callRecord.caller_id, // The caller "sent" the call
+                content: messageContent,
+                message_type: 'call',
+                file_name: status, // Store status in file_name
+                file_size: duration || 0, // Store duration in file_size
+                file_type: 'call' // specific type tag
+            })
+        }
+
         return NextResponse.json({ success: true })
     } catch (error) {
         console.error('Error ending call:', error)

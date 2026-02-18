@@ -8,7 +8,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {
@@ -27,7 +27,19 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: Do not run code between createServerClient and getUser()
   // This ensures proper session handling
-  await supabase.auth.getUser()
+  const { error } = await supabase.auth.getUser()
+
+  if (error) {
+    // If there's an error (e.g. refresh token not found), clear the cookies
+    // so the user is forced to re-login rather than being stuck in a loop
+    // or seeing errors.
+    request.cookies.getAll().forEach((cookie) => {
+      if (cookie.name.startsWith('sb-')) {
+        request.cookies.delete(cookie.name)
+        supabaseResponse.cookies.delete(cookie.name)
+      }
+    })
+  }
 
   return supabaseResponse
 }

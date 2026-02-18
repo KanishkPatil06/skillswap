@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -18,6 +19,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" })
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userId, setUserId] = useState<string | undefined>(undefined)
+  const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
@@ -44,7 +46,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
       <ParticlesBackground />
       <MouseGlow />
       {children}
-      {isAuthenticated && <AIChatbot />}
+      {isAuthenticated && !pathname?.startsWith('/chat') && !pathname?.startsWith('/sessions/room') && <AIChatbot />}
     </>
   )
 }
