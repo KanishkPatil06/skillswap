@@ -82,9 +82,16 @@ export function VoiceAssistant() {
                 // Ignore 'no-speech' (just silence) or 'aborted' (manual stop)
                 if (event.error === 'no-speech' || event.error === 'aborted') {
                     if (shouldListenRef.current && event.error === 'no-speech') {
-                        // internal retry for no-speech if needed, but usually onend handles it
                         return
                     }
+                    return
+                }
+
+                // Network error: stop the loop entirely and notify the user
+                if (event.error === 'network') {
+                    shouldListenRef.current = false
+                    setIsListening(false)
+                    setAiResponse("Network unavailable. Please check your connection and try again.")
                     return
                 }
 
