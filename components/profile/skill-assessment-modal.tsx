@@ -170,7 +170,7 @@ export function SkillAssessmentModal({
                             </div>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                <span>Get a "Verified" badge on your profile</span>
+                                <span>Get a &quot;Verified&quot; badge on your profile</span>
                             </div>
                             {error && (
                                 <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2">
@@ -259,7 +259,7 @@ export function SkillAssessmentModal({
                                 </p>
                             ) : (
                                 <p className="text-muted-foreground">
-                                    Don't worry! You can try again later to verify this skill. Review the topic and come back stronger.
+                                    Don&apos;t worry! You can try again later to verify this skill. Review the topic and come back stronger.
                                 </p>
                             )}
                         </div>

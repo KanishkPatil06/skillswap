@@ -190,7 +190,7 @@ export function AuthForm() {
                                     <DialogHeader>
                                         <DialogTitle className="text-foreground">Reset Password</DialogTitle>
                                         <DialogDescription className="text-muted-foreground">
-                                            Enter your email address and we'll send you a link to reset your password.
+                                            Enter your email address and we&apos;ll send you a link to reset your password.
                                         </DialogDescription>
                                     </DialogHeader>
                                     <ResetPasswordForm onSuccess={() => setShowResetDialog(false)} />
@@ -260,7 +260,7 @@ export function AuthForm() {
                     disabled={loading}
                 >
                     {isLogin
-                        ? <>Don't have an account? <span className="text-primary font-medium">Sign up</span></>
+                        ? <>Don&apos;t have an account? <span className="text-primary font-medium">Sign up</span></>
                         : <>Already have an account? <span className="text-primary font-medium">Sign in</span></>}
                 </button>
             </div>

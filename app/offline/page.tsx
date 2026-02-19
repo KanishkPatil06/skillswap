@@ -7,11 +7,11 @@ export default function OfflinePage() {
                 <div className="text-center px-6 max-w-md">
                     <div className="text-6xl mb-6">📡</div>
                     <h1 className="text-3xl font-bold text-foreground mb-3">
-                        You're Offline
+                        You&apos;re Offline
                     </h1>
                     <p className="text-muted-foreground text-lg mb-8">
-                        It looks like you've lost your internet connection.
-                        Some features may be unavailable until you're back online.
+                        It looks like you&apos;ve lost your internet connection.
+                        Some features may be unavailable until you&apos;re back online.
                     </p>
                     <button
                         onClick={() => window.location.reload()}

@@ -226,8 +226,8 @@ export function VoiceAssistant() {
                 setAiResponse(`Opening profile for ${data.name}...`)
                 const name = data.name.toLowerCase()
 
-                // Find all potential name elements
-                const elements = Array.from(document.querySelectorAll('h3, span, div, p'))
+                // Find all potential name elements (Target h3 specifically as that's where names are in Discover cards)
+                const elements = Array.from(document.querySelectorAll('h3'))
                 const targetElement = elements.find(el => el.textContent?.toLowerCase().includes(name))
 
                 if (targetElement) {
@@ -356,7 +356,7 @@ export function VoiceAssistant() {
                                 ) : aiResponse ? (
                                     <p className="text-sm text-primary font-medium">{aiResponse}</p>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">"Go to dashboard..."</p>
+                                    <p className="text-sm text-muted-foreground">&quot;Go to dashboard...&quot;</p>
                                 )}
                             </div>
 

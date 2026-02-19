@@ -16,7 +16,7 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mb-8 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-muted-foreground backdrop-blur-xl"
+                className="mb-8 inline-flex items-center rounded-full border border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-1 text-sm text-muted-foreground backdrop-blur-xl"
             >
                 <span className="flex items-center gap-1 text-primary">
                     <Sparkles className="h-3 w-3" />
@@ -31,7 +31,7 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
-                className="max-w-4xl text-5xl font-bold tracking-tight sm:text-7xl lg:text-8xl bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent"
+                className="max-w-4xl text-5xl font-bold tracking-tight sm:text-7xl lg:text-8xl bg-gradient-to-b from-gray-900 to-gray-500 dark:from-white dark:to-white/50 bg-clip-text text-transparent"
             >
                 Master any skill <br />
                 <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">

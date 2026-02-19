@@ -140,7 +140,7 @@ export function UserFilterBar({
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4" align="end">
+                        <PopoverContent className="w-80 p-4" align="end" style={{ backgroundColor: "black" }}>
                             <div className="space-y-4">
                                 <h4 className="font-medium leading-none mb-2">Advanced Filters</h4>
 
@@ -156,7 +156,7 @@ export function UserFilterBar({
                                         <SelectTrigger id="category">
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="bg-black">
                                             <SelectItem value="all">All Categories</SelectItem>
                                             {uniqueCategories.map((cat: any) => (
                                                 <SelectItem key={cat} value={cat}>

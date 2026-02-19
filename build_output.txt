@@ -1,0 +1,255 @@
+﻿npx : [baseline-brows
+er-mapping] The data 
+in this module is 
+over two months old. 
+ To ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+At line:1 char:1
++ npx next build 
+2>&1 | Out-File 
+-FilePath "d:\skillsw
+ap-main\build_out ...
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([baseli   
+ ne-brows...ping@    
+latest -D`:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+   Γû▓ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local
+
+ ΓÜá The 
+"middleware" file 
+convention is 
+deprecated. Please 
+use "proxy" instead. 
+Learn more: https://n
+extjs.org/docs/messag
+es/middleware-to-prox
+y
+   Creating an optimized production build ...
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+ Γ£ô Compiled successfully in 6.5s
+   Skipping validation of types
+   Collecting page data using 15 workers ...
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+   Generating static pages using 15 workers (0/34) ...
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+[baseline-browser-map
+ping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-ma
+pping@latest -D`
+   Generating static pages using 15 workers (8/34) 
+   Generating static pages using 15 workers (16/34) 
+   Generating static pages using 15 workers (25/34) 
+ Γ£ô Generating static pages using 15 workers (34/34) in 1251.8ms
+   Finalizing page optimization ...
+
+Route (app)
+Γöî ╞Æ /
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /api/assessment/generate
+Γö£ ╞Æ /api/assessment/submit
+Γö£ ╞Æ /api/assistant
+Γö£ ╞Æ /api/availability
+Γö£ ╞Æ /api/calls/create-room
+Γö£ ╞Æ /api/calls/end
+Γö£ ╞Æ /api/chat
+Γö£ ╞Æ /api/endorsements
+Γö£ ╞Æ /api/gamification/leaderboard
+Γö£ ╞Æ /api/health
+Γö£ ╞Æ /api/migrate
+Γö£ ╞Æ /api/notifications
+Γö£ ╞Æ /api/notifications/trigger
+Γö£ ╞Æ /api/reviews
+Γö£ ╞Æ /api/sessions
+Γö£ ╞Æ /api/skill-match
+Γö£ ╞Æ /api/video/room
+Γö£ ╞Æ /auth/callback
+Γö£ Γùï /auth/error
+Γö£ ╞Æ /auth/reset-password
+Γö£ ╞Æ /chat
+Γö£ ╞Æ /chat/[connectionId]
+Γö£ ╞Æ /connections
+Γö£ ╞Æ /dashboard
+Γö£ ╞Æ /discover
+Γö£ ╞Æ /help-requests
+Γö£ Γùï /leaderboard
+Γö£ Γùï /notifications
+Γö£ Γùï /offline
+Γö£ ╞Æ /profile
+Γö£ ╞Æ /sessions
+Γö£ ╞Æ /sessions/room/[sessionId]
+Γö£ Γùï /settings/availability
+Γöö Γùï /signin
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

@@ -135,7 +135,7 @@ export function AIChatbot() {
             <div className="fixed bottom-6 right-6 z-50">
                 <Button
                     onClick={() => setIsMinimized(false)}
-                    className="h-14 px-4 rounded-full shadow-lg gradient-primary hover:scale-105 transition-all duration-300 gap-2"
+                    className="h-14 px-4 rounded-full shadow-lg gradient-primary hover:scale-105 transition-all duration-300 gap-2 ai-trigger"
                 >
                     <Bot className="h-5 w-5 text-white" />
                     <span className="text-white font-medium">AI Assistant</span>

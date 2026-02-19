@@ -4,31 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: 260 20% 96%;
-  --foreground: 265 30% 12%;
-  --card: 260 30% 100%;
-  --card-foreground: 265 30% 12%;
-  --popover: 260 30% 100%;
-  --popover-foreground: 265 30% 12%;
+  /* Lowered contrast for eye strain prevention (slightly darker white) */
+  --background: 260 25% 97%;
+  --foreground: 265 30% 15%;
+  /* Softer black */
+  --card: 260 30% 99%;
+  /* Off-white card */
+  --card-foreground: 265 30% 15%;
+  --popover: 260 30% 99%;
+  --popover-foreground: 265 30% 15%;
   --primary: 270 90% 58%;
+  /* Luxury Purple */
   --primary-foreground: 0 0% 100%;
-  --secondary: 265 20% 90%;
-  --secondary-foreground: 265 30% 12%;
-  --muted: 265 15% 90%;
-  --muted-foreground: 265 10% 40%;
+  --secondary: 265 20% 92%;
+  /* Softer secondary */
+  --secondary-foreground: 265 30% 15%;
+  --muted: 265 15% 92%;
+  --muted-foreground: 265 10% 45%;
+  /* Softer muted text */
   --accent: 280 75% 65%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --destructive: 340 85% 60%;
+  /* Cool Red/Pink */
   --destructive-foreground: 0 0% 98%;
-  --border: 265 15% 88%;
-  --input: 265 15% 93%;
+  --border: 265 15% 92%;
+  /* Softer border */
+  --input: 265 15% 94%;
   --ring: 270 90% 58%;
-  --radius: 0.75rem;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.875rem;
+
+  /* Chart colors aligned to Purple/Blue/Indigo spectrum */
+  --chart-1: oklch(0.646 0.222 290);
+  /* Purple */
+  --chart-2: oklch(0.6 0.118 270);
+  /* Violet */
+  --chart-3: oklch(0.5 0.15 250);
+  /* Indigo */
+  --chart-4: oklch(0.7 0.18 310);
+  /* Magenta */
+  --chart-5: oklch(0.55 0.2 280);
+  /* Deep Purple */
+
   --sidebar: oklch(0.97 0.01 290);
   --sidebar-foreground: oklch(0.15 0.03 290);
   --sidebar-primary: oklch(0.5 0.25 290);
@@ -41,15 +57,15 @@
 
 .dark {
   --background: 265 50% 5%;
-  --foreground: 260 20% 95%;
+  --foreground: 260 15% 85%;
   --card: 265 40% 9%;
-  --card-foreground: 260 20% 95%;
+  --card-foreground: 260 15% 85%;
   --popover: 265 40% 9%;
-  --popover-foreground: 260 20% 95%;
+  --popover-foreground: 260 15% 85%;
   --primary: 270 95% 65%;
   --primary-foreground: 0 0% 100%;
   --secondary: 265 30% 15%;
-  --secondary-foreground: 260 20% 95%;
+  --secondary-foreground: 260 15% 85%;
   --muted: 265 30% 13%;
   --muted-foreground: 265 15% 55%;
   --accent: 280 80% 72%;
@@ -130,11 +146,11 @@
 /* Custom Gradient Utilities */
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(270 95% 60%) 0%, hsl(300 80% 55%) 100%);
+    background: linear-gradient(135deg, hsl(270 95% 60%) 0%, hsl(240 85% 60%) 100%);
   }
 
   .gradient-secondary {
-    background: linear-gradient(135deg, hsl(280 80% 65%) 0%, hsl(320 70% 55%) 100%);
+    background: linear-gradient(135deg, hsl(280 80% 65%) 0%, hsl(250 80% 60%) 100%);
   }
 
   .gradient-tertiary {
@@ -142,11 +158,12 @@
   }
 
   .gradient-warm {
-    background: linear-gradient(135deg, hsl(310 80% 60%) 0%, hsl(340 82% 52%) 100%);
+    background: linear-gradient(135deg, hsl(290 80% 62%) 0%, hsl(260 85% 58%) 100%);
+    /* Adjusted to cool/warm purple */
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, hsl(270 95% 65%) 0%, hsl(310 80% 65%) 100%);
+    background: linear-gradient(135deg, hsl(270 95% 65%) 0%, hsl(240 80% 65%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -167,11 +184,11 @@
   }
 
   .glow-primary {
-    box-shadow: 0 0 25px hsla(270, 95%, 65%, 0.35), 0 0 60px hsla(270, 95%, 65%, 0.1);
+    box-shadow: 0 0 25px hsla(270, 95%, 65%, 0.15), 0 0 50px hsla(270, 95%, 65%, 0.04);
   }
 
   .glow-accent {
-    box-shadow: 0 0 25px hsla(280, 80%, 72%, 0.35), 0 0 60px hsla(280, 80%, 72%, 0.1);
+    box-shadow: 0 0 25px hsla(280, 80%, 72%, 0.15), 0 0 50px hsla(280, 80%, 72%, 0.04);
   }
 
   .animate-float {
@@ -234,11 +251,11 @@
 
     0%,
     100% {
-      box-shadow: 0 0 15px hsla(270, 95%, 65%, 0.2);
+      box-shadow: 0 0 12px hsla(270, 95%, 65%, 0.12);
     }
 
     50% {
-      box-shadow: 0 0 30px hsla(270, 95%, 65%, 0.4), 0 0 60px hsla(270, 95%, 65%, 0.15);
+      box-shadow: 0 0 22px hsla(270, 95%, 65%, 0.25), 0 0 45px hsla(270, 95%, 65%, 0.08);
     }
   }
 
@@ -296,14 +313,103 @@
     animation-delay: 480ms;
   }
 
-  /* Card hover lift */
+  /* Premium Hover Motions (Light Mode / Default Only) */
+  /* Cards: Lift 4–6px + shadow increase */
+  .paper-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  /* Buttons: Scale 1.03 + soft shadow bloom */
+  .premium-button {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .premium-button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+    /* Brand color bloom */
+  }
+
+  /* Quick Actions: Slight upward move + border tint */
+  .quick-action-card {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+  }
+
+  .quick-action-card:hover {
+    transform: translateY(-3px);
+    border-color: hsla(270, 95%, 65%, 0.3);
+    background-color: hsla(270, 95%, 98%, 0.5);
+  }
+
+  /* Icons: Scale 1.05 + subtle rotate (2deg max) */
+  .interactive-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .interactive-icon:hover {
+    transform: scale(1.05) rotate(2deg);
+  }
+
+  /* Profile image: Soft ring glow increase */
+  .profile-glow {
+    transition: box-shadow 0.3s ease;
+  }
+
+  .profile-glow:hover {
+    box-shadow: 0 0 0 4px hsla(270, 95%, 65%, 0.15);
+  }
+
+  /* Nav items: Smooth underline slide-in */
+  .nav-link {
+    position: relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    bottom: 0;
+    left: 0;
+    background-color: hsl(270, 95%, 65%);
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  /* Stat cards: Shadow deepen + subtle upward motion */
+  .stat-card {
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* AI button: Gentle scale + soft shadow expansion */
+  .ai-trigger {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .ai-trigger:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.4);
+  }
+
+  /* Card hover lift (Legacy - keeping for compatibility but modifying) */
   .card-hover {
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px hsla(270, 95%, 65%, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px hsla(270, 95%, 65%, 0.05), 0 4px 10px rgba(0, 0, 0, 0.02);
   }
 
   @keyframes fadeInUp {

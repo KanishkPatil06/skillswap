@@ -66,10 +66,19 @@ const withPWA = withPWAInit({
 const nextConfig = {
   turbopack: {},
   typescript: {
-    ignoreBuildErrors: true,
+    // ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Suppress "Serializing big strings" warning
+      config.infrastructureLogging = {
+        level: "error",
+      }
+    }
+    return config
   },
 }
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { LogLearningModal } from "./log-learning-modal"
 import { StatCard } from "./stat-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { GlowingCard } from "@/components/ui/glowing-card"
@@ -61,11 +62,23 @@ export default function DashboardContent({ user }: { user: User }) {
       .select("*")
       .or(`initiator_id.eq.${user.id},participant_id.eq.${user.id}`)
 
+    // Fetch Manual Learning Logs
+    const { data: learningLogs } = await supabase
+      .from("learning_logs")
+      .select("duration_minutes, learned_at")
+      .eq("user_id", user.id)
+
+    // ... requests, sessions fetches ...
+
+
     // Process Sessions & Learning Hours
     const completedSessions = sessions?.filter(s => s.status === 'completed') || []
     const learningSessions = completedSessions.filter(s => s.initiator_id === user.id)
 
-    const totalMinutes = learningSessions.reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
+    const sessionMinutes = learningSessions.reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
+    const manualMinutes = learningLogs?.reduce((acc, log) => acc + (log.duration_minutes || 0), 0) || 0
+
+    const totalMinutes = sessionMinutes + manualMinutes
     const learningHours = parseFloat((totalMinutes / 60).toFixed(1))
 
     // Growth Calculations (Last 7 Days vs Previous 7 Days)
@@ -73,7 +86,7 @@ export default function DashboardContent({ user }: { user: User }) {
     const oneWeekAgo = subDays(now, 7)
     const twoWeeksAgo = subDays(now, 14)
 
-    // Sessions Growth
+    // ... Sessions Growth ...
     const currentWeekSessions = completedSessions.filter(s =>
       s.completed_at && isAfter(parseISO(s.completed_at), oneWeekAgo)
     ).length
@@ -88,18 +101,30 @@ export default function DashboardContent({ user }: { user: User }) {
       ? currentWeekSessions * 100
       : Math.round(((currentWeekSessions - previousWeekSessions) / previousWeekSessions) * 100)
 
-    // Learning Hours Growth
-    const currentWeekMinutes = learningSessions
+    // Learning Hours Growth (Sessions + Manual)
+    const currentWeekSessionMinutes = learningSessions
       .filter(s => s.completed_at && isAfter(parseISO(s.completed_at), oneWeekAgo))
       .reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
 
-    const previousWeekMinutes = learningSessions
+    const currentWeekManualMinutes = learningLogs
+      ?.filter(l => l.learned_at && isAfter(parseISO(l.learned_at), oneWeekAgo))
+      .reduce((acc, l) => acc + (l.duration_minutes || 0), 0) || 0
+
+    const currentWeekTotalMinutes = currentWeekSessionMinutes + currentWeekManualMinutes
+
+    const previousWeekSessionMinutes = learningSessions
       .filter(s => s.completed_at && isAfter(parseISO(s.completed_at), twoWeeksAgo) && isBefore(parseISO(s.completed_at), oneWeekAgo))
       .reduce((acc, s) => acc + (s.duration_minutes || 60), 0)
 
-    const learningGrowth = previousWeekMinutes === 0
-      ? (currentWeekMinutes > 0 ? 100 : 0)
-      : Math.round(((currentWeekMinutes - previousWeekMinutes) / previousWeekMinutes) * 100)
+    const previousWeekManualMinutes = learningLogs
+      ?.filter(l => l.learned_at && isAfter(parseISO(l.learned_at), twoWeeksAgo) && isBefore(parseISO(l.learned_at), oneWeekAgo))
+      .reduce((acc, l) => acc + (l.duration_minutes || 0), 0) || 0
+
+    const previousWeekTotalMinutes = previousWeekSessionMinutes + previousWeekManualMinutes
+
+    const learningGrowth = previousWeekTotalMinutes === 0
+      ? (currentWeekTotalMinutes > 0 ? 100 : 0)
+      : Math.round(((currentWeekTotalMinutes - previousWeekTotalMinutes) / previousWeekTotalMinutes) * 100)
 
     setProfile(profileData)
     setStats({
@@ -126,18 +151,11 @@ export default function DashboardContent({ user }: { user: User }) {
     // Realtime Subscription
     const channel = supabase
       .channel('dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => {
-        fetchProfile()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'help_requests' }, () => {
-        fetchProfile()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' }, () => {
-        fetchProfile()
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, () => {
-        fetchProfile()
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, fetchProfile)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'help_requests' }, fetchProfile)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'connections' }, fetchProfile)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'learning_logs' }, fetchProfile) // Listen for logs
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, fetchProfile)
       .subscribe()
 
     return () => {
@@ -178,29 +196,30 @@ export default function DashboardContent({ user }: { user: User }) {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 overflow-hidden relative">
       <MainNav user={user} />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
-          className="space-y-8"
+          className="space-y-10"
         >
           {/* Header Section */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <motion.div variants={item}>
               <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || 'User'}
+                Welcome back, {profile?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
               </h1>
               <p className="mt-2 text-lg text-muted-foreground">
                 Your skill exchange dashboard is looking active today.
               </p>
             </motion.div>
 
-            <motion.div variants={item}>
+            <motion.div variants={item} className="flex gap-3">
+              <LogLearningModal userId={user.id} onSuccess={fetchProfile} />
               <Button
                 onClick={() => router.push('/discover')}
                 size="lg"
-                className="group relative overflow-hidden bg-primary/90 hover:bg-primary transition-all duration-300 shadow-lg shadow-primary/25 rounded-full px-8"
+                className="group relative overflow-hidden bg-primary/90 hover:bg-primary transition-all duration-300 shadow-lg shadow-primary/25 rounded-full px-8 hover-button-premium"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
@@ -212,7 +231,7 @@ export default function DashboardContent({ user }: { user: User }) {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={BookOpen}
               label="Sessions"
@@ -236,7 +255,7 @@ export default function DashboardContent({ user }: { user: User }) {
               label="Reputation"
               value={stats.reputation_score}
               delay={0.3}
-              colorClass="text-amber-500"
+              colorClass="text-blue-400"
             />
             <StatCard
               icon={Users}
@@ -245,18 +264,18 @@ export default function DashboardContent({ user }: { user: User }) {
               trend={stats.connections_trend}
               trendUp={stats.connections_trend_up}
               delay={0.4}
-              colorClass="text-pink-500"
+              colorClass="text-indigo-400"
             />
           </div>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 h-full">
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-3 h-full">
             {/* Quick Actions - Large Card */}
             {/* Quick Actions - Large Card */}
             <GlowingCard
               variants={item}
               className="lg:col-span-2 p-0 bg-transparent border-0"
-              gradient="from-blue-500/10 via-purple-500/10 to-transparent"
+              gradient="from-indigo-500/10 via-purple-500/10 to-transparent"
             >
               <div className="h-full rounded-[20px] bg-black/40 border border-white/5 p-6 md:p-8 backdrop-blur-xl">
                 <div className="mb-6 flex items-center justify-between">
@@ -270,14 +289,14 @@ export default function DashboardContent({ user }: { user: User }) {
                   {[
                     { title: "Discover People", desc: "Find skilled individuals", icon: Users, href: "/discover", color: "from-blue-500/20" },
                     { title: "Help Requests", desc: "Ask the community", icon: HelpCircle, href: "/help-requests", color: "from-purple-500/20" },
-                    { title: "Direct Messages", desc: "Chat with contacts", icon: MessageSquare, href: "/connections", color: "from-pink-500/20" },
-                    { title: "Edit Profile", desc: "Update your skills", icon: UserIcon, href: "/profile", color: "from-orange-500/20" },
+                    { title: "Direct Messages", desc: "Chat with contacts", icon: MessageSquare, href: "/connections", color: "from-indigo-500/20" },
+                    { title: "Edit Profile", desc: "Update your skills", icon: UserIcon, href: "/profile", color: "from-violet-500/20" },
                   ].map((action, i) => (
                     <Link key={i} href={action.href}>
-                      <div className="group relative flex h-full flex-col justify-between rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:scale-[1.02] hover:bg-white/10 hover:shadow-lg dark:hover:bg-white/10 overflow-hidden">
+                      <div className="group relative flex h-full flex-col justify-between rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover-quick-action hover:bg-white/10 hover:shadow-lg dark:hover:bg-white/10 overflow-hidden">
                         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${action.color} to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
                         <div className="relative z-10 flex items-center justify-between">
-                          <div className="rounded-xl bg-background/50 p-2.5 shadow-sm backdrop-blur-sm border border-white/5">
+                          <div className="rounded-xl bg-background/50 p-2.5 shadow-sm backdrop-blur-sm border border-white/5 hover-icon-premium">
                             <action.icon className="h-5 w-5 text-foreground" />
                           </div>
                           <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
@@ -292,19 +311,19 @@ export default function DashboardContent({ user }: { user: User }) {
                 </div>
 
                 {/* Leaderboard Banner */}
-                <Link href="/leaderboard" className="mt-4 block group">
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-transparent p-5 transition-all duration-300 hover:scale-[1.01] border border-amber-500/20">
+                <Link href="/leaderboard" className="mt-5 block group">
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-500/10 via-violet-500/10 to-transparent p-5 transition-all duration-300 hover:scale-[1.01] border border-purple-500/20">
                     <div className="relative z-10 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-full bg-amber-500/20 p-2 border border-amber-500/20">
-                          <Trophy className="h-5 w-5 text-amber-500" />
+                        <div className="rounded-full bg-purple-500/20 p-2 border border-purple-500/20">
+                          <Trophy className="h-5 w-5 text-purple-400" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-foreground">Community Leaderboard</h3>
-                          <p className="text-sm text-muted-foreground">See who's topping the charts this week</p>
+                          <p className="text-sm text-muted-foreground">See who&apos;s topping the charts this week</p>
                         </div>
                       </div>
-                      <ArrowUpRight className="h-5 w-5 text-amber-500 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      <ArrowUpRight className="h-5 w-5 text-purple-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </div>
                   </div>
                 </Link>
@@ -316,16 +335,16 @@ export default function DashboardContent({ user }: { user: User }) {
             <GlowingCard
               variants={item}
               className="p-0 bg-transparent border-0"
-              gradient="from-pink-500/10 via-rose-500/10 to-transparent"
+              gradient="from-violet-500/10 via-blue-500/10 to-transparent"
               delay={0.2}
             >
               <div className="flex h-full flex-col items-center justify-center rounded-[20px] bg-black/40 border border-white/5 p-6 text-center backdrop-blur-xl">
                 <div className="relative mb-6">
-                  <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-50 animate-pulse" />
+                  <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 blur-xl opacity-50 animate-pulse" />
                   <AnimatedAvatar
                     src={profile?.avatar_url}
                     fallback={getInitials(profile?.full_name)}
-                    className="h-28 w-28 border-4 border-black relative z-10"
+                    className="h-28 w-28 border-4 border-black relative z-10 profile-glow"
                   />
                 </div>
 
@@ -353,9 +372,9 @@ export default function DashboardContent({ user }: { user: User }) {
               </div>
             </GlowingCard>
           </div>
-        </motion.div>
-      </main>
-    </div>
+        </motion.div >
+      </main >
+    </div >
   )
 }
 

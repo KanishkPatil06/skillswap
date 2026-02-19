@@ -9,7 +9,7 @@ export default function NotFound() {
           <h1 className="text-6xl font-bold text-primary mb-2">404</h1>
           <h2 className="text-2xl font-semibold text-foreground">Page not found</h2>
         </div>
-        <p className="text-muted-foreground max-w-sm">Sorry, we couldn't find the page you're looking for.</p>
+        <p className="text-muted-foreground max-w-sm">Sorry, we couldn&apos;t find the page you&apos;re looking for.</p>
         <Link href="/dashboard">
           <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
             Go to Dashboard

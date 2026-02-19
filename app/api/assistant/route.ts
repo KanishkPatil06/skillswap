@@ -21,9 +21,11 @@ Supported Actions:
      - "Go past" -> { "action": "navigate", "page": "back" } (NEVER map "past" to "profile")
 
 2. "view_profile": Open a specific user's profile card on the current page.
-   - "name": The name of the user (e.g., "Ian Lopes", "Kanishk").
+   - "name": The name of the user (e.g., "Ian Lopes", "Kanishk", "Soham").
    - TRIGGER: "Open [Name] profile", "View [Name]", "Click [Name]".
    - NOTE: If a specific name is mentioned, use this action, NOT "navigate".
+   - CRITICAL RULE: Do NOT return "View Profile" as the name. The name must be the person's name suitable for searching on screen.
+   - EXAMPLE: "Open Soham profile" -> { "action": "view_profile", "name": "Soham" } (NOT "click View Profile")
 
 3. "open_chatbot": Open the AI Chatbot assistant.
    - TRIGGER: "Open chatbot", "Talk to AI", "Ask AI", "Chat with helper", "Open assistant".
@@ -32,9 +34,15 @@ Supported Actions:
    - "text": The text on the button/link (e.g., "Connect", "Saved", "Filters").
    - TRIGGER: "Click [Text]", "Select [Text]", "Press [Text]".
    - FALLBACK: "Open [Text]" (if [Text] is NOT a page, profile, or chatbot, treat it as a click).
+   - EXCEPTION: "Open [Name] profile" should be view_profile, NOT click.
+   - FORBIDDEN: NEVER return { "action": "click", "text": "View Profile" }. This is ambiguous. YOU MUST EXTRACT THE NAME and use "view_profile".
 
-5. "search": Search for a skill or user.
+5. "search": Search for a skill or user type.
    - "query": string
+   - TRIGGER: "Show me [Skill]", "Find [Role]", "Search for [Skill]", "List [Role]".
+   - CRITICAL RULE: Unless a specific person's name is mentioned, use "search".
+     - "Open developers" -> { "action": "search", "query": "developers" }
+     - "Show designers" -> { "action": "search", "query": "designers" }
 
 6. "theme": Change theme.
    - "mode": "dark" | "light" | "toggle"
@@ -51,6 +59,8 @@ Supported Actions:
 Examples:
 - "Open Ian Lopes profile" -> { "action": "view_profile", "name": "Ian Lopes" }
 - "View profile for Kanishk" -> { "action": "view_profile", "name": "Kanishk" }
+- "Find developers" -> { "action": "search", "query": "developers" }
+- "Show me python experts" -> { "action": "search", "query": "python" }
 - "Open my profile" -> { "action": "navigate", "page": "profile" }
 - "Go to profile" -> { "action": "navigate", "page": "profile" }
 - "Open chatbot" -> { "action": "open_chatbot" }
@@ -107,6 +117,23 @@ export async function POST(request: NextRequest) {
 
         try {
             const command = JSON.parse(cleanJson)
+
+            // CRITICAL FIX: If AI returns "click" with "View Profile", it's useless (opens random profile).
+            // Try to recover the name from the original text if possible, or fail gracefully.
+            if (command.action === "click" && command.text?.toLowerCase().includes("view profile")) {
+                console.warn("AI returned generic View Profile click. Attempting to extract name from:", text)
+                // specific fix for "Open [Name] profile" which AI might have misclassified
+                const nameMatch = text.match(/open\s+(.*?)\s+profile/i) || text.match(/view\s+(.*?)\s+profile/i)
+                if (nameMatch && nameMatch[1]) {
+                    const name = nameMatch[1].replace(/['"]+/g, '').trim()
+                    if (name.toLowerCase() !== "my" && name.toLowerCase() !== "user") {
+                        command.action = "view_profile"
+                        command.name = name
+                        delete command.text
+                    }
+                }
+            }
+
             return NextResponse.json(command)
         } catch (e) {
             console.error("Failed to parse AI response as JSON:", aiMessage)

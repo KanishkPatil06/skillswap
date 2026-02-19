@@ -54,7 +54,7 @@ export function SessionCard({ session, userId }: SessionCardProps) {
                 </div>
                 {session.notes && (
                     <div className="mt-2 text-muted-foreground italic">
-                        "{session.notes}"
+                        &quot;{session.notes}&quot;
                     </div>
                 )}
             </CardContent>

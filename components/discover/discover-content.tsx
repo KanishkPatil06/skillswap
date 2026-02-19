@@ -100,6 +100,7 @@ export default function DiscoverContent({ user }: { user: User }) {
               id,
               level,
               skill:skills (
+                id,
                 name,
                 category
               )
@@ -616,7 +617,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 <Heart className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No saved profiles</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto">
-                  You haven't saved any profiles yet.
+                  You haven&apos;t saved any profiles yet.
                 </p>
               </div>
             )}

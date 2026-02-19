@@ -26,7 +26,7 @@ export default async function LandingPage() {
             {/* Logo / Brand */}
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-purple-500/20" />
-              <span className="text-xl font-bold tracking-tight text-white">SkillSwap</span>
+              <span className="text-xl font-bold tracking-tight text-foreground">SkillSwap</span>
             </div>
 
             {/* Actions */}

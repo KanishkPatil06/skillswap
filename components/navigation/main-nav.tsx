@@ -106,17 +106,18 @@ export function MainNav({ user }: { user: User }) {
             {navItems.map((item) => {
               const isActive = pathname === item.href
               return (
-                <Link key={item.href} href={item.href}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`relative transition-all duration-300 ${isActive
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "hover:bg-primary/5"
+                <Link key={item.href} href={item.href} className="group">
+                  <div
+                    className={`relative px-4 py-2 text-sm font-semibold transition-colors duration-300 ${isActive
+                      ? "text-gray-900 dark:text-white"
+                      : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                       }`}
                   >
-                    {item.label}
-                  </Button>
+                    <span className="relative">
+                      {item.label}
+                      <span className={`absolute -bottom-1 left-0 h-[3px] bg-primary rounded-t-full transition-all duration-300 ease-in-out ${isActive ? "w-full opacity-100" : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"}`}></span>
+                    </span>
+                  </div>
                 </Link>
               )
             })}
