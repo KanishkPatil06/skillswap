@@ -28,7 +28,7 @@ export function StatCard({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay, ease: "easeOut" }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl transition-colors hover:bg-white/10 dark:bg-black/20 dark:hover:bg-black/30 group"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-colors hover:bg-card/90 group"
         >
             {/* Background Gradient Blob */}
             <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-70" />

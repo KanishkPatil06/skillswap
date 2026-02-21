@@ -55,7 +55,7 @@ export function OrbAssistant({ onClick, isOpen }: OrbAssistantProps) {
             </div>
 
             {!isOpen && (
-                <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-black/80 px-3 py-1.5 text-xs font-medium text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100 border border-white/10">
+                <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-popover px-3 py-1.5 text-xs font-medium text-popover-foreground opacity-0 transition-opacity group-hover:opacity-100 shadow-xl border border-border">
                     Ask AI Assistant
                 </div>
             )}

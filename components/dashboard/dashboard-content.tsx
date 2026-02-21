@@ -274,10 +274,10 @@ export default function DashboardContent({ user }: { user: User }) {
             {/* Quick Actions - Large Card */}
             <GlowingCard
               variants={item}
-              className="lg:col-span-2 p-0 bg-transparent border-0"
+              className="lg:col-span-2 p-0 bg-card border border-border"
               gradient="from-indigo-500/10 via-purple-500/10 to-transparent"
             >
-              <div className="h-full rounded-[20px] bg-black/40 border border-white/5 p-6 md:p-8 backdrop-blur-xl">
+              <div className="h-full rounded-[20px] bg-card border border-border p-6 md:p-8">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold tracking-tight">Quick Actions</h2>
                   <div className="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md border border-white/5">
@@ -334,11 +334,11 @@ export default function DashboardContent({ user }: { user: User }) {
             {/* Profile Card */}
             <GlowingCard
               variants={item}
-              className="p-0 bg-transparent border-0"
+              className="p-0 bg-card border border-border"
               gradient="from-violet-500/10 via-blue-500/10 to-transparent"
               delay={0.2}
             >
-              <div className="flex h-full flex-col items-center justify-center rounded-[20px] bg-black/40 border border-white/5 p-6 text-center backdrop-blur-xl">
+              <div className="flex h-full flex-col items-center justify-center rounded-[20px] bg-card border border-border p-6 text-center">
                 <div className="relative mb-6">
                   <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 blur-xl opacity-50 animate-pulse" />
                   <AnimatedAvatar

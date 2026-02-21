@@ -82,7 +82,7 @@ export function UserFilterBar({
                         placeholder="Search by name, bio, or role..."
                         value={searchTerm}
                         onChange={handleSearch}
-                        className="pl-9 bg-background/50"
+                        className="pl-9 bg-card"
                     />
                 </div>
 
@@ -95,7 +95,7 @@ export function UserFilterBar({
                             onSkillChange(val)
                         }}
                     >
-                        <SelectTrigger className="w-[140px] bg-background/50">
+                        <SelectTrigger className="w-[140px] bg-card">
                             <SelectValue placeholder="Skill" />
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +115,7 @@ export function UserFilterBar({
                             onLevelChange(val)
                         }}
                     >
-                        <SelectTrigger className="w-[130px] bg-background/50">
+                        <SelectTrigger className="w-[130px] bg-card">
                             <SelectValue placeholder="Level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -130,7 +130,7 @@ export function UserFilterBar({
                     {/* Advanced Filters Popover */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="bg-background/50 gap-2">
+                            <Button variant="outline" className="bg-card gap-2">
                                 <SlidersHorizontal className="w-4 h-4" />
                                 Filters
                                 {(selectedCategory !== "all" || locationTerm) && (
@@ -140,7 +140,7 @@ export function UserFilterBar({
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4" align="end" style={{ backgroundColor: "black" }}>
+                        <PopoverContent className="w-80 p-4 bg-popover" align="end">
                             <div className="space-y-4">
                                 <h4 className="font-medium leading-none mb-2">Advanced Filters</h4>
 
@@ -156,7 +156,7 @@ export function UserFilterBar({
                                         <SelectTrigger id="category">
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-black">
+                                        <SelectContent className="bg-popover">
                                             <SelectItem value="all">All Categories</SelectItem>
                                             {uniqueCategories.map((cat: any) => (
                                                 <SelectItem key={cat} value={cat}>

@@ -1,11 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
 import Particles, { initParticlesEngine } from "@tsparticles/react"
 import { loadSlim } from "@tsparticles/slim"
 
 export function ParticlesBackground() {
     const [init, setInit] = useState(false)
+    const { resolvedTheme } = useTheme()
+    const isDark = resolvedTheme === "dark"
 
     useEffect(() => {
         initParticlesEngine(async (engine) => {
@@ -17,9 +20,16 @@ export function ParticlesBackground() {
 
     if (!init) return null
 
+    // Light theme: soft purple particles | Dark theme: white particles
+    const particleColor = isDark ? "#ffffff" : "#a855f7"
+    const linkColor = isDark ? "#ffffff" : "#7c3aed"
+    const particleOpacity = isDark ? 0.1 : 0.15
+    const linkOpacity = isDark ? 0.05 : 0.08
+
     return (
         <Particles
             id="tsparticles"
+            key={resolvedTheme}
             className="fixed inset-0 -z-10"
             options={{
                 fullScreen: { enable: false },
@@ -51,13 +61,13 @@ export function ParticlesBackground() {
                 },
                 particles: {
                     color: {
-                        value: "#ffffff",
+                        value: particleColor,
                     },
                     links: {
-                        color: "#ffffff",
+                        color: linkColor,
                         distance: 150,
                         enable: true,
-                        opacity: 0.05,
+                        opacity: linkOpacity,
                         width: 1,
                     },
                     move: {
@@ -79,7 +89,7 @@ export function ParticlesBackground() {
                         value: 60,
                     },
                     opacity: {
-                        value: 0.1,
+                        value: particleOpacity,
                     },
                     shape: {
                         type: "circle",

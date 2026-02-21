@@ -360,7 +360,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
+                    className="group border border-border shadow-sm bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
                   >
 
                     {/* Save Button */}
@@ -476,7 +476,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-card/30 rounded-xl border border-dashed border-border">
+              <div className="text-center py-20 bg-card rounded-xl border border-dashed border-border">
                 <Users className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No profiles match your filters</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto">
@@ -506,7 +506,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.filter(u => u.isSaved).map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
+                    className="group border border-border shadow-sm bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
                   >
                     {/* Save Button */}
                     <Button
@@ -613,7 +613,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-card/30 rounded-xl border border-dashed border-border">
+              <div className="text-center py-20 bg-card rounded-xl border border-dashed border-border">
                 <Heart className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No saved profiles</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto">

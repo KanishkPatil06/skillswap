@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mic, MicOff, Sparkles, X, ChevronRight, Activity, Command } from "lucide-react"
+import { Mic, MicOff, Sparkles, X, ChevronRight, Activity, Command, Volume2, VolumeX } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import { useToast } from "@/components/ui/use-toast"
+import { speak, stop as stopSpeech } from "@/lib/tts"
 
 // Extend Window interface for Web Speech API
 declare global {
@@ -25,6 +26,13 @@ export function VoiceAssistant() {
     const [isProcessing, setIsProcessing] = useState(false)
     const [transcript, setTranscript] = useState("")
     const [aiResponse, setAiResponse] = useState("")
+    const [voiceEnabled, setVoiceEnabled] = useState(true)
+    const voiceEnabledRef = useRef(true)
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        voiceEnabledRef.current = voiceEnabled
+    }, [voiceEnabled])
 
     const recognitionRef = useRef<any>(null)
     const shouldListenRef = useRef(false)
@@ -49,17 +57,22 @@ export function VoiceAssistant() {
 
             recognition.onresult = (event: any) => {
                 const current = event.resultIndex
-                const transcriptText = event.results[current][0].transcript
+                const result = event.results[current]
+                const transcriptText = result[0].transcript
+
                 setTranscript(transcriptText)
                 transcriptRef.current = transcriptText
+
+                if (result.isFinal) {
+                    recognition.stop() // Triggers onend but we handle the command here
+                    handleCommand(transcriptText)
+                }
             }
 
             recognition.onend = () => {
+                // Command is now handled in onresult for faster response
+                // We just handle cleanup and restart here
                 const finalTranscript = transcriptRef.current.trim()
-
-                if (finalTranscript) {
-                    handleCommand(finalTranscript)
-                }
 
                 // Auto-restart if we are still in "listening mode"
                 if (shouldListenRef.current) {
@@ -147,7 +160,29 @@ export function VoiceAssistant() {
     }
 
     const handleCommand = async (text: string) => {
+        if (!text.trim() || isProcessing) return
         setIsProcessing(true)
+
+        // Voice toggle commands
+        const lower = text.toLowerCase().trim()
+        if (lower.includes("turn on voice") || lower.includes("unmute") || lower.includes("voice on") || lower.includes("enable voice")) {
+            setVoiceEnabled(true)
+            setAiResponse("Voice enabled ✓")
+            setIsProcessing(false)
+            setTranscript("")
+            transcriptRef.current = ""
+            return
+        }
+        if (lower.includes("turn off voice") || lower.includes("mute") || lower.includes("voice off") || lower.includes("disable voice")) {
+            setVoiceEnabled(false)
+            stopSpeech()
+            setAiResponse("Voice muted ✓")
+            setIsProcessing(false)
+            setTranscript("")
+            transcriptRef.current = ""
+            return
+        }
+
         try {
             const res = await fetch("/api/assistant", {
                 method: "POST",
@@ -160,6 +195,7 @@ export function VoiceAssistant() {
 
             if (data.action === "navigate") {
                 setAiResponse(`Navigating to ${data.page}...`)
+                if (voiceEnabledRef.current) speak(`Navigating to ${data.page}`)
                 switch (data.page) {
                     case "dashboard": router.push("/dashboard"); break;
                     case "discover": router.push("/discover"); break;
@@ -176,6 +212,7 @@ export function VoiceAssistant() {
                 }
             } else if (data.action === "search") {
                 setAiResponse(`Searching for "${data.query}"...`)
+                if (voiceEnabledRef.current) speak(`Searching for ${data.query}`)
                 router.push(`/discover?q=${encodeURIComponent(data.query)}`)
             } else if (data.action === "theme") {
                 if (data.mode === "toggle") {
@@ -285,6 +322,7 @@ export function VoiceAssistant() {
 
             } else if (data.action === "explain") {
                 setAiResponse(data.response)
+                if (voiceEnabledRef.current) speak(data.response)
             } else {
                 setAiResponse("I'm not sure how to do that yet.")
             }
@@ -315,7 +353,7 @@ export function VoiceAssistant() {
                             initial={{ opacity: 0, y: 20, scale: 0.9 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                            className="mb-4 w-80 p-4 rounded-2xl bg-background/80 backdrop-blur-xl border border-primary/20 shadow-2xl overflow-hidden relative"
+                            className="mb-4 w-80 p-4 rounded-2xl bg-card border border-primary/20 shadow-2xl overflow-hidden relative"
                         >
                             {/* Neon Glow Background */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-purple-500/10 to-blue-500/10 z-0" />
@@ -326,12 +364,30 @@ export function VoiceAssistant() {
                                     <Sparkles className="w-4 h-4 text-primary animate-pulse" />
                                     <span className="text-sm font-semibold text-foreground/80">AI Voice Assistant</span>
                                 </div>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => {
+                                            setVoiceEnabled(prev => {
+                                                const next = !prev
+                                                if (!next) stopSpeech()
+                                                return next
+                                            })
+                                        }}
+                                        className={cn(
+                                            "p-1 rounded-md transition-colors",
+                                            voiceEnabled ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                        title={voiceEnabled ? "Voice ON — click to mute" : "Voice OFF — click to enable"}
+                                    >
+                                        {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                                    </button>
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className="text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Transcript Area */}
@@ -390,7 +446,7 @@ export function VoiceAssistant() {
                         )} />
 
                         {/* Inner Glow/Highlight */}
-                        <div className="absolute inset-[2px] rounded-full bg-black/40 backdrop-blur-sm" />
+                        <div className="absolute inset-[2px] rounded-full bg-slate-900/40" />
 
                         {/* Pulse Effect - Active when listening */}
                         {isListening && (

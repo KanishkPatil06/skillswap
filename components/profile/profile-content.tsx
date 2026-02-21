@@ -271,7 +271,7 @@ export default function ProfileContent({ user }: { user: User }) {
 
                     {/* Left Column - User Info */}
                     <div className="w-full md:w-1/3 space-y-6">
-                        <Card className="overflow-hidden border-0 shadow-lg bg-card/60 backdrop-blur-xl card-hover">
+                        <Card className="overflow-hidden border border-border shadow-lg bg-card card-hover">
                             <CardContent className="p-6">
                                 {/* Profile Header */}
                                 <div className="mb-8 flex flex-col items-center gap-4">
@@ -303,7 +303,7 @@ export default function ProfileContent({ user }: { user: User }) {
                         </Card>
 
                         {/* Badges Section */}
-                        <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                        <Card className="border border-border shadow-sm bg-card">
                             <CardContent className="p-6">
                                 <BadgeList userId={user.id} />
                             </CardContent>
@@ -315,7 +315,7 @@ export default function ProfileContent({ user }: { user: User }) {
 
                         <div className="grid gap-8">
                             {/* Profile Information */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardHeader className="pb-4">
                                     <div className="flex items-center gap-2">
                                         <UserIcon className="w-5 h-5 text-primary" />
@@ -375,14 +375,14 @@ export default function ProfileContent({ user }: { user: User }) {
                             </Card>
 
                             {/* Portfolio Section */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardContent className="pt-6">
                                     <PortfolioSection userId={user.id} isOwnProfile={true} />
                                 </CardContent>
                             </Card>
 
                             {/* Skills Section */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardHeader className="pb-4">
                                     <div className="flex items-center gap-2">
                                         <Briefcase className="w-5 h-5 text-primary" />
@@ -396,7 +396,7 @@ export default function ProfileContent({ user }: { user: User }) {
                                         <div className="flex-1 min-w-[200px] space-y-2">
                                             <label className="text-sm font-medium">Skill</label>
                                             <Select value={selectedSkill} onValueChange={setSelectedSkill}>
-                                                <SelectTrigger className="bg-background/50">
+                                                <SelectTrigger className="bg-background">
                                                     <SelectValue placeholder="Select a skill" />
                                                 </SelectTrigger>
                                                 <SelectContent className="max-h-[200px] overflow-y-auto">
@@ -413,7 +413,7 @@ export default function ProfileContent({ user }: { user: User }) {
                                         <div className="min-w-[150px] space-y-2">
                                             <label className="text-sm font-medium">Level</label>
                                             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                                                <SelectTrigger className="bg-background/50">
+                                                <SelectTrigger className="bg-background">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -494,7 +494,7 @@ export default function ProfileContent({ user }: { user: User }) {
                             </Card>
 
                             {/* Availability Settings */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-xl">Availability</CardTitle>
                                     <CardDescription>Manage your weekly schedule for sessions</CardDescription>
@@ -505,7 +505,7 @@ export default function ProfileContent({ user }: { user: User }) {
                             </Card>
 
                             {/* Privacy Settings */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardHeader>
                                     <div className="flex items-center gap-2">
                                         <Shield className="w-5 h-5 text-primary" />
@@ -537,7 +537,7 @@ export default function ProfileContent({ user }: { user: User }) {
                             </Card>
 
                             {/* Reviews Section */}
-                            <Card className="border-0 shadow-sm bg-card/50 backdrop-blur-sm">
+                            <Card className="border border-border shadow-sm bg-card">
                                 <CardHeader>
                                     <CardTitle className="text-xl">Your Reviews</CardTitle>
                                     <CardDescription>What others are saying about you</CardDescription>

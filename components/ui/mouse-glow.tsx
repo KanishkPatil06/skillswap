@@ -26,7 +26,7 @@ export function MouseGlow() {
     return (
         <div
             ref={glowRef}
-            className="pointer-events-none fixed left-0 top-0 -z-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[100px] transition-opacity duration-500"
+            className="pointer-events-none fixed left-0 top-0 -z-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[100px] transition-opacity duration-500"
         />
     )
 }

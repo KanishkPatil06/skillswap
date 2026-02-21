@@ -279,7 +279,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
               acceptedConnections.map((connection) => (
                 <Card
                   key={connection.id}
-                  className="border-0 shadow-sm bg-card/80 hover:shadow-md transition-all duration-200 group"
+                  className="border border-border shadow-sm bg-card hover:shadow-md transition-all duration-200 group"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
@@ -411,7 +411,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
               pendingConnections.map((connection) => (
                 <Card
                   key={connection.id}
-                  className="border-0 shadow-sm bg-card/80"
+                  className="border border-border shadow-sm bg-card"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
@@ -465,7 +465,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
               requestConnections.map((connection) => (
                 <Card
                   key={connection.id}
-                  className="border-0 shadow-sm bg-card/80"
+                  className="border border-border shadow-sm bg-card"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
