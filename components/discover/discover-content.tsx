@@ -321,7 +321,7 @@ export default function DiscoverContent({ user }: { user: User }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <MainNav user={user} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -365,7 +365,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm glass-proper !bg-transparent transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
+                    className="group border-0 shadow-sm glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-0 sm:p-0 rounded-[24px] transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
                   >
 
                     {/* Save Button */}
@@ -513,7 +513,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.filter(u => u.isSaved).map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border-0 shadow-sm glass-proper !bg-transparent transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
+                    className="group border-0 shadow-sm glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-0 sm:p-0 rounded-[24px] transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
                   >
                     {/* Save Button */}
                     <Button
