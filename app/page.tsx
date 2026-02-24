@@ -20,7 +20,7 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary/30">
       {/* Floating Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+      <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-black/5 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             {/* Logo / Brand */}
@@ -31,15 +31,11 @@ export default async function LandingPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-              <div className="hidden sm:block">
-                <ThemeSwitch />
-              </div>
+              <ThemeSwitch />
               <LoginButton />
             </div>
           </div>
         </div>
-        {/* Nav Blur Backdrop */}
-        <div className="absolute inset-0 -z-10 bg-black/0 backdrop-blur-[2px] mask-[linear-gradient(to_bottom,black_0%,transparent_100%)]" />
       </nav>
 
       <main>

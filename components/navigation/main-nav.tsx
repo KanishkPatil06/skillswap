@@ -108,9 +108,9 @@ export function MainNav({ user }: { user: User }) {
               return (
                 <Link key={item.href} href={item.href} className="group">
                   <div
-                    className={`relative px-4 py-2 text-sm font-semibold transition-colors duration-300 ${isActive
-                      ? "text-gray-900 dark:text-white"
-                      : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                    className={`relative px-4 py-2 text-sm font-semibold transition-all duration-300 rounded-full ${isActive
+                      ? "text-gray-900 dark:text-white bg-card/40 backdrop-blur-md border border-border/50"
+                      : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-card/30 hover:backdrop-blur-sm"
                       }`}
                   >
                     <span className="relative">

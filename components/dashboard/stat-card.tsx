@@ -26,9 +26,8 @@ export function StatCard({
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay, ease: "easeOut" }}
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-colors hover:bg-card/90 group"
+            transition={{ duration: 0.4, delay }}
+            className="group relative overflow-hidden rounded-[24px] glass-proper !bg-white/5 dark:!bg-black/5 backdrop-blur-xl p-4 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 border border-white/10 dark:border-white/5"
         >
             {/* Background Gradient Blob */}
             <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-70" />
@@ -39,7 +38,7 @@ export function StatCard({
                         <Icon className="h-5 w-5" />
                     </div>
                     {trend && (
-                        <div className={`flex items-center text-xs font-medium ${trendUp ? "text-emerald-400" : "text-rose-400"}`}>
+                        <div className={`flex items-center text-xs font-medium ${trendUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             {trendUp ? "+" : ""}{trend}
                         </div>
                     )}

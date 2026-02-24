@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AIChatbot } from "@/components/chatbot/ai-chatbot"
-import { VoiceAssistant } from "@/components/voice-assistant/voice-assistant"
+import { UnifiedAIAssistant } from "@/components/ai-assistant/unified-ai-assistant"
 import { createClient } from "@/lib/supabase/client"
 import { useOnlineStatus } from "@/hooks/use-online-status"
 import "./globals.css"
@@ -48,10 +47,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
       <MouseGlow />
       {children}
       {isAuthenticated && !pathname?.startsWith('/chat') && !pathname?.startsWith('/sessions/room') && (
-        <>
-          <AIChatbot />
-          <VoiceAssistant />
-        </>
+        <UnifiedAIAssistant />
       )}
     </>
   )

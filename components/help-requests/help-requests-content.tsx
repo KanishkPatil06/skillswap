@@ -156,7 +156,7 @@ export default function HelpRequestsContent({ user }: { user: User }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <MainNav user={user} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -181,98 +181,102 @@ export default function HelpRequestsContent({ user }: { user: User }) {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
             <h2 className="text-xl font-semibold">All Open Requests ({helpRequests.length})</h2>
-            {helpRequests.length > 0 ? (
-              helpRequests.map((request) => (
-                <Card key={request.id} className="bg-card hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{request.title}</CardTitle>
-                        <CardDescription>by {request.profile?.full_name || "Anonymous"}</CardDescription>
-                      </div>
-                      <Badge className={`${getStatusColor(request.status)} border-0`}>{request.status}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {request.description && <p className="text-sm text-foreground">{request.description}</p>}
-                    <div className="flex items-center justify-between pt-4 border-t border-border">
-                      <Badge variant="outline">{request.skill?.name}</Badge>
-                      <p className="text-xs text-muted-foreground">
-                        {parseStringAsUTC(request.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
-                      </p>
-                    </div>
+            <div className="glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-4 sm:p-6 rounded-[24px] border border-white/10 dark:border-white/5 min-h-[400px]">
+              <div className="space-y-4">
+                {helpRequests.length > 0 ? (
+                  helpRequests.map((request) => (
+                    <Card key={request.id} className="glass-proper !bg-white/5 dark:!bg-black/10 border-border/10 hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">{request.title}</CardTitle>
+                            <CardDescription>by {request.profile?.full_name || "Anonymous"}</CardDescription>
+                          </div>
+                          <Badge className={`${getStatusColor(request.status)} border-0`}>{request.status}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {request.description && <p className="text-sm text-foreground">{request.description}</p>}
+                        <div className="flex items-center justify-between pt-4 border-t border-border/10">
+                          <Badge variant="outline" className="glass-proper">{request.skill?.name}</Badge>
+                          <p className="text-xs text-muted-foreground">
+                            {parseStringAsUTC(request.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
+                          </p>
+                        </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
-                      {request.user_id === user.id ? (
-                        // Owner can mark as completed
-                        request.status !== "completed" && request.status !== "closed" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleCompleteRequest(request.id)}
-                            disabled={updatingStatus === request.id}
-                            className="gap-2 bg-purple-600 hover:bg-purple-700"
-                          >
-                            {updatingStatus === request.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Check className="w-4 h-4" />
-                            )}
-                            Mark as Completed
-                          </Button>
-                        )
-                      ) : (
-                        // Non-owners can accept if status is open
-                        request.status === "open" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleAcceptRequest(request.id)}
-                            disabled={updatingStatus === request.id}
-                            className="gap-2"
-                          >
-                            {updatingStatus === request.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Check className="w-4 h-4" />
-                            )}
-                            Accept Help Request
-                          </Button>
-                        )
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <Card>
-                <CardContent className="pt-8 text-center text-muted-foreground">
-                  <p>No open help requests at the moment. Create the first one!</p>
-                </CardContent>
-              </Card>
-            )}
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 pt-2">
+                          {request.user_id === user.id ? (
+                            // Owner can mark as completed
+                            request.status !== "completed" && request.status !== "closed" && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleCompleteRequest(request.id)}
+                                disabled={updatingStatus === request.id}
+                                className="gap-2 bg-purple-600 hover:bg-purple-700"
+                              >
+                                {updatingStatus === request.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                                Mark as Completed
+                              </Button>
+                            )
+                          ) : (
+                            // Non-owners can accept if status is open
+                            request.status === "open" && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAcceptRequest(request.id)}
+                                disabled={updatingStatus === request.id}
+                                className="gap-2"
+                              >
+                                {updatingStatus === request.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                                Accept Help Request
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="glass-proper !bg-transparent border-dashed border-white/20">
+                    <CardContent className="pt-8 text-center text-muted-foreground">
+                      <p>No open help requests at the moment. Create the first one!</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="lg:col-span-1">
             <h2 className="text-xl font-semibold mb-4">Your Requests ({myRequests.length})</h2>
-            <div className="space-y-4">
-              {myRequests.length > 0 ? (
-                myRequests.map((request) => (
-                  <Card key={request.id} className="bg-muted/30">
-                    <CardContent className="pt-4">
-                      <h4 className="font-semibold text-sm line-clamp-2">{request.title}</h4>
-                      <Badge className={`${getStatusColor(request.status)} border-0 mt-2 text-xs`}>
-                        {request.status}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="pt-4 text-center text-sm text-muted-foreground">
+            <div className="glass-proper !bg-white/5 dark:!bg-black/20 backdrop-blur-xl p-4 sm:p-6 rounded-[24px] border border-white/10 dark:border-white/5 min-h-[200px]">
+              <div className="space-y-4">
+                {myRequests.length > 0 ? (
+                  myRequests.map((request) => (
+                    <Card key={request.id} className="glass-proper !bg-transparent border-border/10">
+                      <CardContent className="pt-4">
+                        <h4 className="font-semibold text-sm line-clamp-2">{request.title}</h4>
+                        <Badge className={`${getStatusColor(request.status)} border-0 mt-2 text-xs`}>
+                          {request.status}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="pt-4 text-center text-sm text-muted-foreground italic">
                     <p>No requests yet</p>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

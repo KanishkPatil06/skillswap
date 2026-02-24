@@ -50,13 +50,13 @@ export function ParallaxSteps() {
         <section ref={containerRef} className="relative py-32 overflow-hidden">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mb-20 text-center">
-                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">How SkillSwap Works</h2>
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">How SkillSwap Works</h2>
                     <p className="mt-4 text-lg text-muted-foreground">From sign up to mastery in four simple steps.</p>
                 </div>
 
                 <div className="relative mx-auto max-w-2xl">
                     {/* Connecting Line */}
-                    <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-white/10 md:left-1/2 md:-ml-px" />
+                    <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border/40 md:left-1/2 md:-ml-px" />
 
                     {/* Animated Draw Line */}
                     <motion.div
@@ -76,7 +76,7 @@ export function ParallaxSteps() {
                                     }`}
                             >
                                 {/* Icon Marker */}
-                                <div className="absolute left-8 -translate-x-1/2 md:left-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-black bg-zinc-900 shadow-[0_0_0_8px_black]">
+                                <div className="absolute left-8 -translate-x-1/2 md:left-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background dark:border-black dark:bg-zinc-900 shadow-[0_0_0_8px_hsl(var(--background))] dark:shadow-[0_0_0_8px_black]">
                                     <div className={`h-3 w-3 rounded-full ${step.color.replace('text-', 'bg-')}`} />
                                 </div>
 
@@ -87,7 +87,7 @@ export function ParallaxSteps() {
                                         <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg ${step.bg} ${step.color} ring-1 ring-inset ${step.border}`}>
                                             <step.icon className="h-5 w-5" />
                                         </div>
-                                        <h3 className="text-lg font-semibold text-white">{step.title}</h3>
+                                        <h3 className="text-lg font-semibold text-foreground dark:text-white">{step.title}</h3>
                                         <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
                                     </div>
                                 </div>

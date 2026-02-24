@@ -193,7 +193,7 @@ export default function DashboardContent({ user }: { user: User }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 overflow-hidden relative">
+    <div className="min-h-screen bg-transparent text-foreground selection:bg-primary/20 overflow-hidden relative">
       <MainNav user={user} />
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -274,13 +274,13 @@ export default function DashboardContent({ user }: { user: User }) {
             {/* Quick Actions - Large Card */}
             <GlowingCard
               variants={item}
-              className="lg:col-span-2 p-0 bg-card border border-border"
+              className="lg:col-span-2 p-0"
               gradient="from-indigo-500/10 via-purple-500/10 to-transparent"
             >
-              <div className="h-full rounded-[20px] bg-card border border-border p-6 md:p-8">
+              <div className="h-full rounded-[20px] glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-6 md:p-8">
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold tracking-tight">Quick Actions</h2>
-                  <div className="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md border border-white/5">
+                  <div className="rounded-full glass-proper px-3 py-1 text-xs font-semibold text-foreground/80">
                     Shortcuts
                   </div>
                 </div>
@@ -293,10 +293,10 @@ export default function DashboardContent({ user }: { user: User }) {
                     { title: "Edit Profile", desc: "Update your skills", icon: UserIcon, href: "/profile", color: "from-violet-500/20" },
                   ].map((action, i) => (
                     <Link key={i} href={action.href}>
-                      <div className="group relative flex h-full flex-col justify-between rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover-quick-action hover:bg-white/10 hover:shadow-lg dark:hover:bg-white/10 overflow-hidden">
+                      <div className="group relative flex h-full flex-col justify-between rounded-2xl glass-proper p-5 transition-all duration-300 hover-quick-action hover:bg-white/5 dark:hover:bg-black/5 hover:shadow-lg overflow-hidden">
                         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${action.color} to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
                         <div className="relative z-10 flex items-center justify-between">
-                          <div className="rounded-xl bg-background/50 p-2.5 shadow-sm backdrop-blur-sm border border-white/5 hover-icon-premium">
+                          <div className="rounded-full glass-proper px-3 py-1 text-xs font-medium text-muted-foreground hover-icon-premium">
                             <action.icon className="h-5 w-5 text-foreground" />
                           </div>
                           <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
@@ -334,11 +334,11 @@ export default function DashboardContent({ user }: { user: User }) {
             {/* Profile Card */}
             <GlowingCard
               variants={item}
-              className="p-0 bg-card border border-border"
+              className="p-0"
               gradient="from-violet-500/10 via-blue-500/10 to-transparent"
               delay={0.2}
             >
-              <div className="flex h-full flex-col items-center justify-center rounded-[20px] bg-card border border-border p-6 text-center">
+              <div className="flex h-full flex-col items-center justify-center rounded-[20px] glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-6 text-center">
                 <div className="relative mb-6">
                   <div className="absolute -inset-4 rounded-full bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 blur-xl opacity-50 animate-pulse" />
                   <AnimatedAvatar
@@ -352,12 +352,12 @@ export default function DashboardContent({ user }: { user: User }) {
                 <p className="text-sm text-muted-foreground mb-6 line-clamp-2 px-4">{profile?.bio || "No bio yet"}</p>
 
                 <div className="grid w-full grid-cols-2 gap-3 mb-6 px-2">
-                  <div className="rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <div className="text-2xl font-bold tracking-tight text-white">{stats.skills}</div>
+                  <div className="rounded-2xl glass-proper p-4 hover:bg-white/5 dark:hover:bg-black/5 transition-colors">
+                    <div className="text-2xl font-bold tracking-tight text-foreground">{stats.skills}</div>
                     <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mt-1">Skills</div>
                   </div>
-                  <div className="rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <div className="text-2xl font-bold tracking-tight text-white">{stats.reputation_score}</div>
+                  <div className="rounded-2xl glass-proper p-4 hover:bg-white/5 dark:hover:bg-black/5 transition-colors">
+                    <div className="text-2xl font-bold tracking-tight text-foreground">{stats.reputation_score}</div>
                     <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mt-1">Score</div>
                   </div>
                 </div>

@@ -35,7 +35,7 @@ export function FeaturesSection() {
         <section className="relative py-24 sm:py-32">
             {/* Section Header */}
             <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center mb-16">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent">
                     Everything you need to <br /> level up your skills.
                 </h2>
             </div>
@@ -45,11 +45,11 @@ export function FeaturesSection() {
                     {features.map((feature, i) => (
                         <GlowingCard key={feature.title} delay={i * 0.1} gradient={feature.gradient}>
                             <div className="flex flex-col h-full justify-between">
-                                <div className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/10`}>
-                                    <feature.icon className="h-6 w-6 text-white" />
+                                <div className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 dark:bg-white/5 ring-1 ring-primary/20 dark:ring-white/10`}>
+                                    <feature.icon className="h-6 w-6 text-primary dark:text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-semibold leading-8 text-white">{feature.title}</h3>
+                                    <h3 className="text-lg font-semibold leading-8 text-foreground dark:text-white">{feature.title}</h3>
                                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                                         {feature.description}
                                     </p>

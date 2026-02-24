@@ -12,7 +12,7 @@ export function OrbAssistant({ onClick, isOpen }: OrbAssistantProps) {
     return (
         <motion.button
             onClick={onClick}
-            className="fixed bottom-6 right-6 z-50 group"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, scale: 0 }}
@@ -29,13 +29,13 @@ export function OrbAssistant({ onClick, isOpen }: OrbAssistantProps) {
 
                 {/* Pulse Effect */}
                 <motion.div
-                    className="absolute -inset-4 rounded-full bg-indigo-500/30 blur-xl"
+                    className="absolute -inset-2 rounded-full bg-indigo-500/20 blur-lg"
                     animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 0.8, 0.5]
+                        scale: [1, 1.1, 1],
+                        opacity: [0.3, 0.5, 0.3]
                     }}
                     transition={{
-                        duration: 3,
+                        duration: 4,
                         repeat: Infinity,
                         ease: "easeInOut"
                     }}

@@ -16,10 +16,12 @@ import { SkillMatchModal } from "./skill-match-modal"
 import { UserFilterBar } from "./user-filter-bar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileViewModal } from "./ProfileViewModal"
+import { AnimatedAvatar } from "@/components/ui/animated-avatar"
 
 interface UserProfile {
   id: string
   full_name: string | null
+  avatar_url: string | null
   bio: string | null
   linkedin_url: string | null
   rating_score: number
@@ -88,6 +90,7 @@ export default function DiscoverContent({ user }: { user: User }) {
           .select(`
             id, 
             full_name, 
+            avatar_url,
             bio, 
             linkedin_url, 
             rating_score, 
@@ -344,14 +347,16 @@ export default function DiscoverContent({ user }: { user: User }) {
           </div>
 
           {/* Improved Search & Filters */}
-          <UserFilterBar
-            onSearchChange={setSearchTerm}
-            onSkillChange={setSelectedSkill}
-            onLevelChange={setSelectedLevel}
-            onCategoryChange={setSelectedCategory}
-            onLocationChange={setLocationTerm}
-            skills={skills}
-          />
+          <div className="glass-proper rounded-2xl mb-6">
+            <UserFilterBar
+              onSearchChange={setSearchTerm}
+              onSkillChange={setSelectedSkill}
+              onLevelChange={setSelectedLevel}
+              onCategoryChange={setSelectedCategory}
+              onLocationChange={setLocationTerm}
+              skills={skills}
+            />
+          </div>
 
           <TabsContent value="discover" className="mt-0">
             {/* User Grid */}
@@ -360,7 +365,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border border-border shadow-sm bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
+                    className="group border-0 shadow-sm glass-proper !bg-transparent transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
                   >
 
                     {/* Save Button */}
@@ -380,9 +385,11 @@ export default function DiscoverContent({ user }: { user: User }) {
                       {/* User Header */}
                       <div className="flex items-start gap-4 mb-4">
                         <div className="relative">
-                          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-xl shrink-0 border-2 border-background shadow-sm" style={{ backgroundImage: `linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)`, color: 'white' }}>
-                            {getInitials(profile.full_name)}
-                          </div>
+                          <AnimatedAvatar
+                            src={profile.avatar_url}
+                            fallback={getInitials(profile.full_name)}
+                            className="w-14 h-14 border-2 border-background shadow-sm"
+                          />
                           <div className="absolute -bottom-0.5 -right-0.5">
                             <OnlineIndicator isOnline={profile.is_online} size="sm" />
                           </div>
@@ -506,7 +513,7 @@ export default function DiscoverContent({ user }: { user: User }) {
                 {filteredUsers.filter(u => u.isSaved).map((profile) => (
                   <Card
                     key={profile.id}
-                    className="group border border-border shadow-sm bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative card-hover"
+                    className="group border-0 shadow-sm glass-proper !bg-transparent transition-all duration-300 hover:-translate-y-1 relative card-hover overflow-hidden"
                   >
                     {/* Save Button */}
                     <Button
@@ -525,9 +532,11 @@ export default function DiscoverContent({ user }: { user: User }) {
                       {/* User Header */}
                       <div className="flex items-start gap-4 mb-4">
                         <div className="relative">
-                          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-foreground font-semibold text-xl shrink-0 border-2 border-background shadow-sm" style={{ backgroundImage: `linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)`, color: 'white' }}>
-                            {getInitials(profile.full_name)}
-                          </div>
+                          <AnimatedAvatar
+                            src={profile.avatar_url}
+                            fallback={getInitials(profile.full_name)}
+                            className="w-14 h-14 border-2 border-background shadow-sm"
+                          />
                           <div className="absolute -bottom-0.5 -right-0.5">
                             <OnlineIndicator isOnline={profile.is_online} size="sm" />
                           </div>

@@ -20,7 +20,7 @@ export function GlowingCard({ className, children, gradient = "from-primary/20 v
             transition={{ delay, duration: 0.5 }}
             whileHover={{ y: -2 }}
             className={cn(
-                "group relative overflow-hidden rounded-3xl border border-white/5 bg-black/40 backdrop-blur-xl transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5",
+                "group relative overflow-hidden rounded-3xl border border-black/5 dark:border-white/5 backdrop-blur-xl transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5",
                 className
             )}
         >

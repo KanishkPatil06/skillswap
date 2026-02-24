@@ -208,12 +208,12 @@ export function AIChatbot() {
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                                     <Bot className="w-4 h-4" />
                                 </div>
-                                <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: 'hsl(var(--muted))' }}>
+                                <div className="rounded-2xl rounded-tl-sm px-4 py-3 glass-proper !bg-muted/30 backdrop-blur-md">
                                     <div className="flex items-center gap-2">
                                         <div className="flex gap-1">
-                                            <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'hsl(var(--muted-foreground))', animationDelay: '0ms' }} />
-                                            <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'hsl(var(--muted-foreground))', animationDelay: '150ms' }} />
-                                            <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'hsl(var(--muted-foreground))', animationDelay: '300ms' }} />
+                                            <span className="w-2 h-2 rounded-full animate-bounce bg-muted-foreground" style={{ animationDelay: '0ms' }} />
+                                            <span className="w-2 h-2 rounded-full animate-bounce bg-muted-foreground" style={{ animationDelay: '150ms' }} />
+                                            <span className="w-2 h-2 rounded-full animate-bounce bg-muted-foreground" style={{ animationDelay: '300ms' }} />
                                         </div>
                                         <span className="text-xs text-muted-foreground ml-2">Generating response...</span>
                                     </div>

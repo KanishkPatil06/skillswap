@@ -37,10 +37,9 @@ export function ChatbotMessage({ role, content, timestamp, isError }: ChatbotMes
                     isAI
                         ? isError
                             ? "bg-destructive/10 text-foreground rounded-tl-sm border border-destructive/20"
-                            : "rounded-tl-sm"
+                            : "glass-proper !bg-muted/30 backdrop-blur-md rounded-tl-sm border-border/10"
                         : "bg-primary text-primary-foreground rounded-tr-sm"
                 )}
-                style={isAI && !isError ? { backgroundColor: 'hsl(var(--muted))' } : undefined}
             >
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{content}</p>
                 {timestamp && (

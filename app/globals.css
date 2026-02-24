@@ -4,13 +4,12 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Lowered contrast for eye strain prevention (slightly darker white) */
-  --background: 260 25% 97%;
-  --foreground: 265 30% 15%;
-  /* Softer black */
-  --card: 260 30% 99%;
-  /* Off-white card */
-  --card-foreground: 265 30% 15%;
+  /* Rich off-white for better card contrast */
+  --background: 260 15% 94%;
+  --foreground: 265 30% 10%;
+  /* Pure white cards to pop against off-white bg */
+  --card: 0 0% 100%;
+  --card-foreground: 265 30% 10%;
   --popover: 260 30% 99%;
   --popover-foreground: 265 30% 15%;
   --primary: 270 90% 58%;
@@ -19,8 +18,8 @@
   --secondary: 265 20% 92%;
   /* Softer secondary */
   --secondary-foreground: 265 30% 15%;
-  --muted: 265 15% 92%;
-  --muted-foreground: 265 10% 45%;
+  --muted: 265 15% 90%;
+  --muted-foreground: 265 15% 35%;
   /* Softer muted text */
   --accent: 280 75% 65%;
   --accent-foreground: 0 0% 100%;
@@ -139,7 +138,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-transparent text-foreground antialiased;
   }
 }
 
@@ -181,6 +180,22 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(168, 85, 247, 0.15);
+  }
+
+  .glass-proper {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .glass-proper {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   }
 
   .glow-primary {

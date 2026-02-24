@@ -1,11 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { AuthModal } from "@/components/auth/auth-modal"
 
 export function CTASection() {
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
     return (
         <section className="relative py-24 px-6 lg:px-8 overflow-hidden">
             {/* Glow Bomb */}
@@ -16,10 +19,10 @@ export function CTASection() {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
+                    className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60"
                 >
                     Ready to accelerate your <br />
-                    <span className="text-white">learning journey?</span>
+                    <span className="text-foreground dark:text-white">learning journey?</span>
                 </motion.h2>
 
                 <motion.p
@@ -38,16 +41,24 @@ export function CTASection() {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="mt-10 flex items-center justify-center gap-x-6"
                 >
-                    <Link href="/signin">
-                        <Button size="lg" className="h-12 px-8 rounded-full text-base bg-white text-black hover:bg-white/90 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                            Get Started Now
-                        </Button>
-                    </Link>
-                    <Link href="/about" className="text-sm font-semibold leading-6 text-white hover:text-primary transition-colors flex items-center gap-1 group">
+                    <Button
+                        size="lg"
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="h-12 px-8 rounded-full text-base bg-white text-black hover:bg-white/90 font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                    >
+                        Get Started Now
+                    </Button>
+                    <Link href="/about" className="text-sm font-semibold leading-6 text-foreground/80 dark:text-white hover:text-primary dark:hover:text-primary transition-colors flex items-center gap-1 group">
                         Learn more <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </motion.div>
             </div>
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                defaultMode="signup"
+            />
         </section>
     )
 }

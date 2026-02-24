@@ -20,11 +20,11 @@ export function ParticlesBackground() {
 
     if (!init) return null
 
-    // Light theme: soft purple particles | Dark theme: white particles
-    const particleColor = isDark ? "#ffffff" : "#a855f7"
-    const linkColor = isDark ? "#ffffff" : "#7c3aed"
-    const particleOpacity = isDark ? 0.1 : 0.15
-    const linkOpacity = isDark ? 0.05 : 0.08
+    // Light theme: deep purple particles | Dark theme: muted white/silver particles
+    const particleColor = isDark ? "#4b5563" : "#6b21a8" // Darker gray for dark mode, deeper purple for light mode
+    const linkColor = isDark ? "#4b5563" : "#581c87"
+    const particleOpacity = isDark ? 0.4 : 0.25 // Increased opacity to make them "darker" and more visible
+    const linkOpacity = isDark ? 0.2 : 0.15
 
     return (
         <Particles

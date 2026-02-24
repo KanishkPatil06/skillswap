@@ -82,7 +82,7 @@ export function UserFilterBar({
                         placeholder="Search by name, bio, or role..."
                         value={searchTerm}
                         onChange={handleSearch}
-                        className="pl-9 bg-card"
+                        className="pl-9 bg-transparent border-white/10"
                     />
                 </div>
 
@@ -95,7 +95,7 @@ export function UserFilterBar({
                             onSkillChange(val)
                         }}
                     >
-                        <SelectTrigger className="w-[140px] bg-card">
+                        <SelectTrigger className="w-[140px] bg-transparent border-white/10">
                             <SelectValue placeholder="Skill" />
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +115,7 @@ export function UserFilterBar({
                             onLevelChange(val)
                         }}
                     >
-                        <SelectTrigger className="w-[130px] bg-card">
+                        <SelectTrigger className="w-[130px] bg-transparent border-white/10">
                             <SelectValue placeholder="Level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -130,7 +130,7 @@ export function UserFilterBar({
                     {/* Advanced Filters Popover */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="bg-card gap-2">
+                            <Button variant="outline" className="bg-transparent border-white/10 gap-2">
                                 <SlidersHorizontal className="w-4 h-4" />
                                 Filters
                                 {(selectedCategory !== "all" || locationTerm) && (

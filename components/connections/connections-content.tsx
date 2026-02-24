@@ -235,7 +235,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <MainNav user={user} />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
@@ -246,8 +246,8 @@ export default function ConnectionsContent({ user }: { user: User }) {
         </div>
 
         <Tabs defaultValue="connected" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/50">
-            <TabsTrigger value="connected" className="gap-2">
+          <TabsList className="grid w-full grid-cols-3 max-w-md glass-proper !bg-transparent border-border/20">
+            <TabsTrigger value="connected" className="gap-2 data-[state=active]:glass-proper data-[state=active]:!bg-white/10">
               Connected
               {acceptedConnections.length > 0 && (
                 <Badge variant="secondary" className="ml-1 text-xs">
@@ -273,136 +273,139 @@ export default function ConnectionsContent({ user }: { user: User }) {
             </TabsTrigger>
           </TabsList>
 
-          {/* Connected Tab */}
-          <TabsContent value="connected" className="space-y-4">
-            {acceptedConnections.length > 0 ? (
-              acceptedConnections.map((connection) => (
-                <Card
-                  key={connection.id}
-                  className="border border-border shadow-sm bg-card hover:shadow-md transition-all duration-200 group"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <Link href={`/profile/${connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}`}>
-                        {connection.profile?.avatar_url ? (
-                          <img
-                            src={connection.profile.avatar_url}
-                            alt={connection.profile?.full_name || "User"}
-                            className="w-12 h-12 rounded-full object-cover shadow-sm border border-border/20"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg shadow-inner border border-border/20" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
-                            {getInitials(connection.profile?.full_name)}
-                          </div>
-                        )}
-                      </Link>
-
-                      <div className="flex-1 min-w-0 grid grid-cols-1 gap-1">
-                        <div className="flex items-center gap-2 justify-between">
-                          <h3 className="font-semibold text-foreground truncate flex items-center gap-2">
-                            {connection.profile?.full_name || "User"}
-                            {pinnedIds.has(connection.id) && (
-                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border flex items-center gap-1 text-muted-foreground">
-                                📌 Pinned
-                              </span>
-                            )}
-                          </h3>
-                        </div>
-
-                        {/* Last Message or Bio */}
-                        <div className="min-h-[1.25rem]">
-                          {connection.last_message ? (
-                            <p className={`text-sm truncate pr-4 ${(connection.unread_count || 0) > 0
-                              ? "font-medium text-foreground"
-                              : "text-muted-foreground"
-                              }`}>
-                              {connection.last_message}
-                            </p>
-                          ) : (
-                            connection.profile?.bio ? (
-                              <p className="text-sm text-muted-foreground truncate">
-                                {connection.profile.bio}
-                              </p>
+          <TabsContent value="connected" className="space-y-4 focus-visible:outline-none">
+            <div className="glass-proper !bg-white/5 dark:!bg-black/10 backdrop-blur-2xl p-4 sm:p-6 rounded-[24px] border border-white/10 dark:border-white/5 min-h-[400px]">
+              <div className="space-y-4">
+                {acceptedConnections.length > 0 ? (
+                  acceptedConnections.map((connection) => (
+                    <Card
+                      key={connection.id}
+                      className="glass-proper !bg-transparent border-border/10 shadow-sm hover:shadow-md transition-all duration-200 group"
+                    >
+                      <CardContent className="p-4">
+                        {/* ... card content ... */}
+                        <div className="flex items-center gap-4">
+                          <Link href={`/profile/${connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}`}>
+                            {connection.profile?.avatar_url ? (
+                              <img
+                                src={connection.profile.avatar_url}
+                                alt={connection.profile?.full_name || "User"}
+                                className="w-12 h-12 rounded-full object-cover shadow-sm border border-border/20"
+                              />
                             ) : (
-                              <p className="text-sm text-muted-foreground italic">
-                                Start a conversation
-                              </p>
-                            )
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Link href={`/chat/${connection.id}`} className="flex-1">
-                          <Button className="gap-2 transition-all w-full relative">
-                            <MessageSquare className="w-4 h-4" />
-                            Message
-                            {(connection.unread_count || 0) > 0 && (
-                              <Badge className="ml-1 px-1.5 min-w-[20px] h-5 text-xs bg-destructive border-0">
-                                {connection.unread_count}
-                              </Badge>
+                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-lg shadow-inner border border-border/20" style={{ boxShadow: 'inset 0 1.5px 4.5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1)' }}>
+                                {getInitials(connection.profile?.full_name)}
+                              </div>
                             )}
-                          </Button>
-                        </Link>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="outline">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <SessionBookingDialog
-                              connectionId={connection.id}
-                              participantId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
-                              participantName={connection.profile?.full_name || "User"}
-                              trigger={
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                  <Calendar className="w-4 h-4 mr-2" />
-                                  Book Session
-                                </DropdownMenuItem>
-                              }
-                            />
-                            <RateUserDialog
-                              userId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
-                              userName={connection.profile?.full_name || "User"}
-                              trigger={
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                  <Star className="w-4 h-4 mr-2" />
-                                  Rate User
-                                </DropdownMenuItem>
-                              }
-                            />
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteConnection(connection.id)}
-                              disabled={deletingId === connection.id}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              {deletingId === connection.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          </Link>
+
+                          <div className="flex-1 min-w-0 grid grid-cols-1 gap-1">
+                            <div className="flex items-center gap-2 justify-between">
+                              <h3 className="font-semibold text-foreground truncate flex items-center gap-2">
+                                {connection.profile?.full_name || "User"}
+                                {pinnedIds.has(connection.id) && (
+                                  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border flex items-center gap-1 text-muted-foreground">
+                                    📌 Pinned
+                                  </span>
+                                )}
+                              </h3>
+                            </div>
+
+                            <div className="min-h-[1.25rem]">
+                              {connection.last_message ? (
+                                <p className={`text-sm truncate pr-4 ${(connection.unread_count || 0) > 0
+                                  ? "font-medium text-foreground"
+                                  : "text-muted-foreground"
+                                  }`}>
+                                  {connection.last_message}
+                                </p>
                               ) : (
-                                <Trash2 className="w-4 h-4 mr-2" />
+                                connection.profile?.bio ? (
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {connection.profile.bio}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    Start a conversation
+                                  </p>
+                                )
                               )}
-                              Disconnect
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <EmptyState
-                icon={Users}
-                title="No connections yet"
-                description="Discover people and send connection requests to start building your network."
-                action={
-                  <Link href="/discover">
-                    <Button>Discover People</Button>
-                  </Link>
-                }
-              />
-            )}
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Link href={`/chat/${connection.id}`} className="flex-1">
+                              <Button className="gap-2 transition-all w-full relative">
+                                <MessageSquare className="w-4 h-4" />
+                                Message
+                                {(connection.unread_count || 0) > 0 && (
+                                  <Badge className="ml-1 px-1.5 min-w-[20px] h-5 text-xs bg-destructive border-0">
+                                    {connection.unread_count}
+                                  </Badge>
+                                )}
+                              </Button>
+                            </Link>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="outline" className="glass-proper">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <SessionBookingDialog
+                                  connectionId={connection.id}
+                                  participantId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
+                                  participantName={connection.profile?.full_name || "User"}
+                                  trigger={
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                      <Calendar className="w-4 h-4 mr-2" />
+                                      Book Session
+                                    </DropdownMenuItem>
+                                  }
+                                />
+                                <RateUserDialog
+                                  userId={connection.connected_user_id === user.id ? connection.user_id : connection.connected_user_id}
+                                  userName={connection.profile?.full_name || "User"}
+                                  trigger={
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                      <Star className="w-4 h-4 mr-2" />
+                                      Rate User
+                                    </DropdownMenuItem>
+                                  }
+                                />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteConnection(connection.id)}
+                                  disabled={deletingId === connection.id}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  {deletingId === connection.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                  )}
+                                  Disconnect
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <EmptyState
+                    icon={Users}
+                    title="No connections yet"
+                    description="Discover people and send connection requests to start building your network."
+                    action={
+                      <Link href="/discover">
+                        <Button>Discover People</Button>
+                      </Link>
+                    }
+                  />
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           {/* Pending Tab */}
@@ -411,7 +414,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
               pendingConnections.map((connection) => (
                 <Card
                   key={connection.id}
-                  className="border border-border shadow-sm bg-card"
+                  className="glass-proper !bg-transparent border-border/20 shadow-sm"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
@@ -465,7 +468,7 @@ export default function ConnectionsContent({ user }: { user: User }) {
               requestConnections.map((connection) => (
                 <Card
                   key={connection.id}
-                  className="border border-border shadow-sm bg-card"
+                  className="glass-proper !bg-transparent border-border/20 shadow-sm"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
