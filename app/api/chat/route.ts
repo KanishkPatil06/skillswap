@@ -47,11 +47,17 @@ export async function POST(request: NextRequest) {
 
         let aiMessage: string | null = null
 
+        // Gemini requires conversations to start with "user" — strip any leading assistant messages
+        // (e.g. the welcome message the UI sends as the first item)
+        const userMessages: { role: string; content: string }[] = messages
+        const firstUserIdx = userMessages.findIndex((m: { role: string }) => m.role === "user")
+        const trimmedMessages = firstUserIdx >= 0 ? userMessages.slice(firstUserIdx) : userMessages
+
         // Priority 1: Google Gemini API (ultra-fast, reliable, free tier supported)
         if (GEMINI_API_KEY) {
             try {
-                // Convert messages to Gemini contents format
-                const contents = messages.map((m: { role: string; content: string }) => ({
+                // Convert messages to Gemini contents format (must start with "user")
+                const contents = trimmedMessages.map((m: { role: string; content: string }) => ({
                     role: m.role === "assistant" ? "model" : "user",
                     parts: [{ text: m.content }]
                 }))
@@ -89,7 +95,7 @@ export async function POST(request: NextRequest) {
         if (!aiMessage && OPENROUTER_API_KEY && !OPENROUTER_API_KEY.startsWith("AIzaSy")) {
             const formattedMessages = [
                 { role: "system", content: SYSTEM_PROMPT },
-                ...messages.map((msg: { role: string; content: string }) => ({
+                ...trimmedMessages.map((msg: { role: string; content: string }) => ({
                     role: msg.role,
                     content: msg.content
                 }))
