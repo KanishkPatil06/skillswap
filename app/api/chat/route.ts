@@ -53,43 +53,43 @@ export async function POST(request: NextRequest) {
         const firstUserIdx = userMessages.findIndex((m: { role: string }) => m.role === "user")
         const trimmedMessages = firstUserIdx >= 0 ? userMessages.slice(firstUserIdx) : userMessages
 
-        // Priority 1: Google Gemini API (ultra-fast, reliable, free tier supported)
+        // Priority 1: Google Gemini API — try models in order until one works
         if (GEMINI_API_KEY) {
-            try {
-                // Convert messages to Gemini contents format (must start with "user")
-                const contents = trimmedMessages.map((m: { role: string; content: string }) => ({
+            const geminiModels = [
+                "gemini-3.8-flash",
+                "gemini-3.5-flash",
+                "gemini-flash-latest",
+            ]
+
+            const geminiBody = JSON.stringify({
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                contents: trimmedMessages.map((m: { role: string; content: string }) => ({
                     role: m.role === "assistant" ? "model" : "user",
                     parts: [{ text: m.content }]
-                }))
+                })),
+                generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+            })
 
-                const geminiRes = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            systemInstruction: {
-                                parts: [{ text: SYSTEM_PROMPT }]
-                            },
-                            contents,
-                            generationConfig: {
-                                temperature: 0.7,
-                                maxOutputTokens: 1024
-                            }
-                        })
+            for (const model of geminiModels) {
+                if (aiMessage) break
+                try {
+                    const geminiRes = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+                        { method: "POST", headers: { "Content-Type": "application/json" }, body: geminiBody }
+                    )
+                    if (geminiRes.ok) {
+                        const data = await geminiRes.json()
+                        aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || null
+                        if (aiMessage) break
+                    } else {
+                        console.error(`Gemini ${model} error:`, geminiRes.status)
                     }
-                )
-
-                if (geminiRes.ok) {
-                    const data = await geminiRes.json()
-                    aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || null
-                } else {
-                    console.error("Gemini API error in chat route:", geminiRes.status, await geminiRes.text())
+                } catch (err) {
+                    console.error(`Gemini ${model} fetch error:`, err)
                 }
-            } catch (err) {
-                console.error("Gemini fetch error in chat:", err)
             }
         }
+
 
         // Priority 2: Fallback to OpenRouter with active free model
         if (!aiMessage && OPENROUTER_API_KEY && !OPENROUTER_API_KEY.startsWith("AIzaSy")) {
