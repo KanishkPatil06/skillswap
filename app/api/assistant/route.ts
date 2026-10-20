@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-
 const SYSTEM_PROMPT = `You are the SkillSwap Voice Command Assistant.
 Your job is to extract structured commands from user speech.
 
@@ -74,43 +72,85 @@ Examples:
 - "What is SkillSwap?" -> { "action": "explain", "response": "SkillSwap is a platform to exchange skills..." }
 `
 
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || (OPENROUTER_API_KEY?.startsWith("AIzaSy") ? OPENROUTER_API_KEY : undefined)
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://skillswap.vercel.app"
+
 export async function POST(request: NextRequest) {
     try {
         const { text } = await request.json()
 
-        if (!OPENROUTER_API_KEY) {
+        if (!GEMINI_API_KEY && !OPENROUTER_API_KEY) {
             return NextResponse.json({
                 action: "explain",
-                response: "AI service not configured. Please add API key."
+                response: "AI service not configured. Please add an API key."
             })
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json",
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "SkillSwap Voice Assistant"
-            },
-            body: JSON.stringify({
-                model: "google/gemma-2-9b-it",
-                messages: [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    { role: "user", content: text }
-                ],
-                temperature: 0.1, // Low temperature for deterministic JSON commands
-                max_tokens: 200
-            })
-        })
+        let aiMessage = "{}"
 
-        if (!response.ok) {
-            console.error("OpenRouter API error", response.status)
-            return NextResponse.json({ action: "explain", response: "Sorry, I couldn't process that command." })
+        // Priority 1: Direct Google Gemini API (super fast, robust)
+        if (GEMINI_API_KEY) {
+            try {
+                const geminiRes = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [
+                                {
+                                    role: "user",
+                                    parts: [{ text: `${SYSTEM_PROMPT}\n\nUser speech to parse: "${text}"` }]
+                                }
+                            ],
+                            generationConfig: {
+                                temperature: 0.1,
+                                maxOutputTokens: 250
+                            }
+                        })
+                    }
+                )
+
+                if (geminiRes.ok) {
+                    const data = await geminiRes.json()
+                    aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}"
+                } else {
+                    console.error("Gemini API error:", geminiRes.status, await geminiRes.text())
+                }
+            } catch (err) {
+                console.error("Gemini fetch error:", err)
+            }
         }
 
-        const data = await response.json()
-        const aiMessage = data.choices?.[0]?.message?.content || "{}"
+        // Priority 2: Fallback to OpenRouter with verified active free model
+        if (aiMessage === "{}" && OPENROUTER_API_KEY && !OPENROUTER_API_KEY.startsWith("AIzaSy")) {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": APP_URL,
+                    "X-Title": "SkillSwap Voice Assistant"
+                },
+                body: JSON.stringify({
+                    model: "meta-llama/llama-3.1-8b-instruct:free",
+                    messages: [
+                        { role: "system", content: SYSTEM_PROMPT },
+                        { role: "user", content: text }
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 200
+                })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                aiMessage = data.choices?.[0]?.message?.content || "{}"
+            } else {
+                console.error("OpenRouter API error:", response.status)
+            }
+        }
 
         // Clean up markdown if present (sometimes models add it despite instructions)
         const cleanJson = aiMessage.replace(/```json\n?|\n?```/g, "").trim()
